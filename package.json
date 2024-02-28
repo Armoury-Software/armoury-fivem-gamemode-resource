@@ -19,17 +19,18 @@
         "@types/node": "^20.11.19",
         "@typescript-eslint/eslint-plugin": "^5.14.0",
         "@typescript-eslint/parser": "^5.14.0",
+        "esbuild": "^0.20.1",
+        "esbuild-plugin-tsc": "^0.4.0",
         "eslint": "^8.11.0",
         "eslint-config-airbnb-base": "^15.0.0",
         "eslint-plugin-import": "^2.25.4",
         "injection-js": "^2.4.0",
         "prettier": "^2.5.1",
         "reflect-metadata": "^0.2.1",
+        "rxjs": "^7.8.1",
         "string-replace-loader": "^3.1.0",
         "ts-loader": "^9.5.1",
-        "typescript": "^5.3.3",
-        "esbuild": "^0.20.1",
-        "esbuild-plugin-tsc": "^0.4.0"
+        "typescript": "^5.3.3"
     },
     "browser": {}
 }
