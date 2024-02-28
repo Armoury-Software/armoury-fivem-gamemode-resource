@@ -1,6 +1,6 @@
-import { Controller, ServerController } from '@armoury/fivem-framework';
+import { Controller } from '@armoury/fivem-framework';
 
 @Controller()
-export class Server extends ServerController {
+export class Server {
     // TODO: Implement stuff here
 }
