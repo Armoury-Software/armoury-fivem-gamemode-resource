@@ -1,2 +1,3 @@
-dist
+dist/client
+dist/server
 node_modules
