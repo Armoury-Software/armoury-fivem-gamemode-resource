@@ -1,0 +1,12 @@
+{
+  "name": "armoury-fivem-base-resource-server",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "Radu Mazilu @ Armoury <radu.mazilu@armoury.ro>",
+  "type": "commonjs",
+  "scripts": {},
+  "dependencies": {
+    "@armoury/fivem-framework-server": "^1.0.8"
+  }
+}

@@ -5,10 +5,11 @@ const fs = require('fs');
 const clientFilePath = 'dist/client/dist.client.js';
 const serverFilePath = 'dist/server/dist.server.js';
 
-const config = (entryPoint, outputFile) => ({
+const config = (entryPoint, outputFile, platform) => ({
     entryPoints: [entryPoint],
     bundle: true,
     outfile: outputFile,
+    ...(platform && { platform }),
     plugins: [
         esbuildPluginTsc({
             force: true,
@@ -21,7 +22,7 @@ const config = (entryPoint, outputFile) => ({
 
 async function bundle() {
     await esbuild.build(config('src/client/client.ts', clientFilePath));
-    await esbuild.build(config('src/server/server.ts', serverFilePath));
+    await esbuild.build(config('src/server/server.ts', serverFilePath, 'node'));
 }
 
 const clientPlugins = [
@@ -69,7 +70,7 @@ async function watch() {
     ).watch();
     await (
         await esbuild.context({
-            ...config('src/server/server.ts', serverFilePath),
+            ...config('src/server/server.ts', serverFilePath, 'node'),
             plugins: serverPlugins,
         })
     ).watch();

@@ -1,4 +1,4 @@
-import { Controller } from '@armoury/fivem-framework';
+import { Controller } from '@armoury/fivem-framework-server';
 
 @Controller()
 export class Server {
