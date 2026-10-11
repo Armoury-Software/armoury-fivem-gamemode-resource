@@ -1,4 +1,8 @@
-import { Client_Init } from '@armoury/fivem-framework';
-import { Client } from './controllers/client.controller';
+import { bootstrap } from '@armoury/fivem-roleplay-gamemode-client';
 
-Client_Init(Client);
+import { Client } from './controllers/client.controller';
+import { SpawningConfig } from './config/spawn.config';
+
+bootstrap(Client, {
+  eager: [SpawningConfig],
+});

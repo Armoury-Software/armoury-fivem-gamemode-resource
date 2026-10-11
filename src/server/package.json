@@ -1,0 +1,16 @@
+{
+  "name": "armoury-fivem-roleplay-gamemode-resource-server",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "Armoury <contact@armoury.ro>",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@armoury/fivem-framework-server": "^1.0.15",
+    "@armoury/fivem-roleplay-gamemode-server": "^1.0.12"
+  }
+}

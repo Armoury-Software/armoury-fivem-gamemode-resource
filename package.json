@@ -4,9 +4,7 @@
     "type": "commonjs",
     "description": "",
     "main": "index.js",
-    "dependencies": {
-        "@armoury/fivem-framework": "^1.0.5"
-    },
+    "dependencies": {},
     "scripts": {
         "dev": "node esbuild.settings.js --watch",
         "build": "prettier --write . && node esbuild.settings.js",
@@ -19,6 +17,7 @@
         "@types/node": "^20.11.19",
         "@typescript-eslint/eslint-plugin": "^5.14.0",
         "@typescript-eslint/parser": "^5.14.0",
+        "clone-deep": "^4.0.1",
         "esbuild": "^0.20.1",
         "esbuild-plugin-tsc": "^0.4.0",
         "eslint": "^8.11.0",
@@ -32,5 +31,9 @@
         "ts-loader": "^9.5.1",
         "typescript": "^5.3.3"
     },
-    "browser": {}
+    "browser": {},
+    "workspaces": [
+        "src/client",
+        "src/server"
+    ]
 }

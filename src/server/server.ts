@@ -1,4 +1,7 @@
-import { Server_Init } from '@armoury/fivem-roleplay-gamemode';
+import { bootstrap } from '@armoury/fivem-roleplay-gamemode-server';
 import { Server } from './controllers/server.controller';
+import { PedPopulationConfig } from './config/ped-population.config';
 
-Server_Init(Server);
+bootstrap(Server, {
+  eager: [PedPopulationConfig],
+});

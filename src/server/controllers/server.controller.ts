@@ -1,5 +1,5 @@
-import { Controller, Export } from '@armoury/fivem-framework';
-import { type IItemBase } from '@armoury/fivem-roleplay-gamemode';
+import { Controller, Export } from '@armoury/fivem-framework-server';
+import { type IItemBase } from '@armoury/fivem-roleplay-gamemode-server';
 
 @Controller()
 export class Server {
