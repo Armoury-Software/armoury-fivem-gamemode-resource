@@ -7,6 +7,6 @@
   "type": "commonjs",
   "scripts": {},
   "dependencies": {
-    "@armoury/fivem-framework-server": "^1.0.8"
+    "@armoury/fivem-framework-server": "^1.0.15"
   }
 }
