@@ -445,14 +445,14 @@ argparse@^2.0.1:
   version "1.0.0"
   resolved "file:src/client"
   dependencies:
-    "@armoury/fivem-framework-client" "^1.0.14"
+    "@armoury/fivem-framework-client" "^1.0.15"
     "@armoury/fivem-roleplay-gamemode-client" "^1.0.12"
 
 "armoury-fivem-roleplay-gamemode-resource-server@file:D:\\txData\\FiveMBasicServerCFXDefault_C90346.base\\resources\\[armoury]\\armoury-roleplay\\src\\server":
   version "1.0.0"
   resolved "file:src/server"
   dependencies:
-    "@armoury/fivem-framework-server" "^1.0.14"
+    "@armoury/fivem-framework-server" "^1.0.15"
     "@armoury/fivem-roleplay-gamemode-server" "^1.0.12"
 
 array-includes@^3.1.4:

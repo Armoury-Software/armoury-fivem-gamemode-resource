@@ -3,7 +3,6 @@ import { Injectable } from 'injection-js';
 
 @Injectable()
 export class SpawningConfig {
-
   public constructor(
     @Config('spawn') private readonly spawnConfig: SpawnConfig,
     @Resource('spawnmanager') private readonly spawnManager: ResourceRef
@@ -36,7 +35,6 @@ export class SpawningConfig {
     Cfx.exports['spawnmanager'].setAutoSpawn(true);
     Cfx.exports['spawnmanager'].forceRespawn();
   }
-  
 }
 
 interface SpawnConfig {
