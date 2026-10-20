@@ -1,9 +1,10 @@
-import { EVENT_DIRECTIONS, EventListener, Session, SessionService } from '@armoury/fivem-framework-server';
+import { Config, EVENT_DIRECTIONS, EventListener, Session, SessionService } from '@armoury/fivem-framework-server';
 import { Account, Character } from '@armoury/fivem-roleplay-gamemode-server';
 import { Injectable } from 'injection-js';
 
-import { CharacterRepository } from '../../repository/character/character.repository';
 import { AccountService } from '../account/account.service';
+import { CharacterRepository } from '../../repository/character/character.repository';
+import { PersistableService } from '../persistable/persistable.service';
 
 @Injectable()
 export class CharacterService {
@@ -11,8 +12,10 @@ export class CharacterService {
   private _playerIdsToCharacterIds: Map<number, number> = new Map();
 
   public constructor(
+    @Config('spawn') private readonly _spawnConfig: SpawnConfig,
     private readonly _repository: CharacterRepository,
     private readonly _accountService: AccountService,
+    private readonly _persistableService: PersistableService,
     private readonly _sessionService: SessionService
   ) {}
 
@@ -44,13 +47,13 @@ export class CharacterService {
     this._sessionService.setPlayerPrincipal(playerId, character.id);
 
     const session = this._sessionService.getSessionByPrincipal(character.id);
-    const accountId = this._accountService.findByPlayerId(playerId);
+    const accountId = this._accountService.findByPlayerId(playerId)?.id;
 
-    // session.setState('principal', character.id, true); // TODO: Put this back
-    // session.setState('firstName', character.firstName, true); // TODO: Put this back
-    // session.setState('lastName', character.lastName, true); // TODO: Put this back
-    // session.setState('language', character.language); // TODO: Put this back
-    // session.setState('hoursPlayed', character.hoursPlayed); // TODO: Put this back
+    session.setState('principal', character.id, true);
+    session.setState('firstName', character.firstName, true);
+    session.setState('lastName', character.lastName, true);
+    session.setState('language', character.language);
+    session.setState('hoursPlayed', character.hoursPlayed);
 
     console.log(
       `Player [${Cfx.Server.GetPlayerName(
@@ -61,7 +64,27 @@ export class CharacterService {
   }
 
   public async create(account: Account): Promise<Character> {
-    const character = await this._repository.create(account.id, '', '', { x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 0 });
+    const position: [number, number, number] = [
+      this._spawnConfig.position.x,
+      this._spawnConfig.position.y,
+      this._spawnConfig.position.z,
+    ];
+
+    const rotation: [number, number, number] = [
+      this._spawnConfig.rotation.x,
+      this._spawnConfig.rotation.y,
+      this._spawnConfig.rotation.z,
+    ];
+
+    const character = await this._repository.create(
+      account.id,
+      '',
+      '',
+      this._spawnConfig.position,
+      this._spawnConfig.rotation
+    );
+
+    const persistable = await this._persistableService.create(character.id, position, rotation);
 
     return character;
   }
@@ -124,4 +147,9 @@ export class CharacterService {
       )} (${playerId})] (characterId: ${principal}) disconnected. Character authentication removed.`
     );
   }
+}
+
+interface SpawnConfig {
+  position: { x: number; y: number; z: number };
+  rotation: { x: number; y: number; z: number };
 }

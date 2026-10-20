@@ -12,7 +12,12 @@ export class AccountService {
   public constructor(private readonly _accountRepository: AccountRepository) {}
 
   public findByPlayerId(playerId: number): Account | null {
-    return this._accountsLoggedIn.get(playerId) ?? null;
+    const accountId = this._playerIdsToAccountIds.get(playerId);
+    if (accountId == null) {
+      return null;
+    }
+
+    return this._accountsLoggedIn.get(accountId) ?? null;
   }
 
   public drop(accountId: number): void {
@@ -82,7 +87,7 @@ export class AccountService {
       console.log(
         `An account was not found for [${Cfx.Server.GetPlayerName(session.id.toString())} ` +
           `(${session.id})] (platformId: ${session.platformId}). An account has been created ` +
-          `for them. (Account ID: ${account.id}.)`
+          `for them. (Account ID: ${account.id})`
       );
     }
 
@@ -115,7 +120,8 @@ export class AccountService {
     this._accountsLoggedIn.set(result.account.id, result.account);
     this._playerIdsToAccountIds.set(session.id, result.account.id);
 
-    // session.setServerClaim('accountId', result.account.id); // TODO: Put this back
+    session = Session.from(session);
+    session.setServerClaim('accountId', result.account.id);
 
     console.log(
       `Player [${Cfx.Server.GetPlayerName(session.id.toString())} (${session.id})] authenticated (accountId: ${

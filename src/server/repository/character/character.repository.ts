@@ -7,7 +7,25 @@ export class CharacterRepository {
   public constructor(@Resource('oxmysql') private readonly _db: ResourceRef) {}
 
   public async findById(id: number): Promise<Character | null> {
-    const result = await this._db.instance.query_async(`SELECT * FROM characters WHERE id = ? LIMIT 1`, [id]);
+    const result = await this._db.instance.query_async(
+      `SELECT
+        c.*,
+        p.lastKnownPosX AS lastLocationPosX,
+        p.lastKnownPosY AS lastLocationPosY,
+        p.lastKnownPosZ AS lastLocationPosZ,
+        p.lastKnownRotX AS lastLocationRotX,
+        p.lastKnownRotY AS lastLocationRotY,
+        p.lastKnownRotZ AS lastLocationRotZ
+      FROM characters c
+      INNER JOIN persistables p ON p.id = (
+        SELECT MIN(p2.id)
+        FROM persistables p2
+        WHERE p2.owner = c.id
+      )
+      WHERE c.id = ?
+      LIMIT 1`,
+      [id]
+    );
 
     if (!result.length) {
       return null;
@@ -17,7 +35,24 @@ export class CharacterRepository {
   }
 
   public async findByAccountId(accountId: number): Promise<Character[]> {
-    const result = await this._db.instance.query_async(`SELECT * FROM characters WHERE accountId = ?`, [accountId]);
+    const result = await this._db.instance.query_async(
+      `SELECT
+        c.*,
+        p.lastKnownPosX AS lastLocationPosX,
+        p.lastKnownPosY AS lastLocationPosY,
+        p.lastKnownPosZ AS lastLocationPosZ,
+        p.lastKnownRotX AS lastLocationRotX,
+        p.lastKnownRotY AS lastLocationRotY,
+        p.lastKnownRotZ AS lastLocationRotZ
+      FROM characters c
+      INNER JOIN persistables p ON p.id = (
+        SELECT MIN(p2.id)
+        FROM persistables p2
+        WHERE p2.owner = c.id
+      )
+      WHERE c.accountId = ?`,
+      [accountId]
+    );
 
     return result.map((row: any) => this.rowToCharacter(row));
   }
@@ -30,11 +65,8 @@ export class CharacterRepository {
     rotation: { x: number; y: number; z: number }
   ): Promise<Character> {
     const id = await this._db.instance.insert_async(
-      `INSERT INTO characters (accountId, firstName, lastName,
-        lastLocationPosX, lastLocationPosY, lastLocationPosZ,
-        lastLocationRotX, lastLocationRotY, lastLocationRotZ
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [accountId, firstName, lastName, position.x, position.y, position.z, rotation.x, rotation.y, rotation.z]
+      `INSERT INTO characters (accountId, firstName, lastName) VALUES (?, ?, ?)`,
+      [accountId, firstName, lastName]
     );
 
     return new Character(id, accountId, 0, 'en-US', firstName, lastName, position, rotation, new Date());
