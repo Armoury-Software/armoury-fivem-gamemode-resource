@@ -24,8 +24,8 @@ export class StashRepository {
     );
 
     const id = await this._db.instance.insert_async(
-      `INSERT INTO stashes (owningPersistableId, maxSlots, maxWeight) VALUES (?, ?, ?)`,
-      [persistable.id, maxSlots, maxWeight]
+      `INSERT INTO stashes (owningPersistableId, type, maxSlots, maxWeight) VALUES (?, ?, ?, ?)`,
+      [persistable.id, type, maxSlots, maxWeight]
     );
 
     // TODO: Do class instantiation
@@ -35,7 +35,7 @@ export class StashRepository {
       maxSlots,
       maxWeight: maxWeight ?? Infinity,
       owningPersistableId: persistable.id,
-      slots: [],
+      slots: new Array(maxSlots).fill(null),
     };
   }
 
@@ -101,5 +101,24 @@ export class StashRepository {
     );
 
     return this.fetch(...rows.map((row: { id: number }) => row.id));
+  }
+
+  /** Replace all affected slot lists in one transaction, including cross-stash moves. */
+  public async saveSlots(stashes: Stash[]): Promise<void> {
+    const queries: Array<{ query: string; values: unknown[] }> = [];
+    for (const stash of stashes) {
+      queries.push({ query: 'DELETE FROM stashes_slots WHERE stashId = ?', values: [stash.id] });
+      for (const slot of stash.slots) {
+        if (slot) {
+          queries.push({
+            query: 'INSERT INTO stashes_slots (stashId, slotIndex, itemIdentifier, amount) VALUES (?, ?, ?, ?)',
+            values: [stash.id, slot.slotIndex, slot.itemIdentifier, slot.amount],
+          });
+        }
+      }
+    }
+    if (queries.length && !(await this._db.instance.transaction_async(queries))) {
+      throw new Error('Stash slot transaction failed');
+    }
   }
 }
