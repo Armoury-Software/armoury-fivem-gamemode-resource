@@ -84,3 +84,27 @@ export class StashService {
     return stashes;
   }
 }
+
+// TODO: Extract to gamemode lib
+enum StashActions {
+  Reorder = 'reorder',
+}
+
+// TODO: Extract to gamemode lib
+interface StashReorderAction {
+  type: StashActions.Reorder;
+  previousIndex: number;
+  currentIndex: number;
+}
+
+// TODO: Extract to gamemode lib
+type StashAction = StashReorderAction;
+
+// TODO: Extract to gamemode lib
+interface StashChange {
+  stashId: number;
+  stashType: string;
+  // All indices refer to the list before and after the drop. Actions describe
+  // one change together; they are not sequential moveItemInArray instructions.
+  actions: StashAction[];
+}
