@@ -54,6 +54,7 @@ export class CharacterService {
     session.setState('lastName', character.lastName, true);
     session.setState('language', character.language);
     session.setState('hoursPlayed', character.hoursPlayed);
+    session.setServerClaim('persistableId', character.persistableId);
 
     console.log(
       `Player [${Cfx.Server.GetPlayerName(
@@ -61,6 +62,8 @@ export class CharacterService {
       )} (${playerId})] (accountId: ${accountId}) just logged into character ` +
         `[${character.firstName} ${character.lastName} (${character.id})]`
     );
+
+    Cfx.emit('armoury:character-logged-into', playerId, character);
   }
 
   public async create(account: Account): Promise<Character> {
@@ -85,6 +88,7 @@ export class CharacterService {
     );
 
     const persistable = await this._persistableService.create(character.id, position, rotation);
+    character.persistableId = persistable.id;
 
     return character;
   }

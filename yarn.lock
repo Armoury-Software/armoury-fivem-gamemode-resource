@@ -2,67 +2,49 @@
 # yarn lockfile v1
 
 
-"@armoury/fivem-framework-client@^1.0.31":
-  version "1.0.31"
-  resolved "https://registry.npmjs.org/@armoury/fivem-framework-client/-/fivem-framework-client-1.0.31.tgz"
-  integrity sha512-5aZAPtm6QTDHnF/88cuxSbdpFpmjD07sxBF2i81ZSXrcDyMAYRCGbtX81G0Ul2JeeIhB0mRgEIlMO3gFKzOUrA==
+"@armoury/fivem-framework-client@^1.0.49":
+  version "1.0.49"
+  resolved "https://registry.npmjs.org/@armoury/fivem-framework-client/-/fivem-framework-client-1.0.49.tgz"
+  integrity sha512-9PmcSZehHItZMxucxEmKVaK1wrTpQcMODkCXNvRf52bzSaoNWZBmlb/w4Cftft4r+tPjaXQlRqa8kLlcUn0kKw==
   dependencies:
     injection-js "^2.4.0"
     reflect-metadata "^0.2.1"
     rxjs "^7.8.1"
 
-"@armoury/fivem-framework-client@^1.0.37":
-  version "1.0.37"
-  resolved "https://registry.npmjs.org/@armoury/fivem-framework-client/-/fivem-framework-client-1.0.37.tgz"
-  integrity sha512-e7o3t4179soTo8yLahRWr/FVxv25FNGT43GZ9R17wv21Wtu9cwwID2KvR7m1DjOtLfpefAabhNPSDQMo/yd1vg==
-  dependencies:
-    injection-js "^2.4.0"
-    reflect-metadata "^0.2.1"
-    rxjs "^7.8.1"
-
-"@armoury/fivem-framework-common@1.0.31":
-  version "1.0.31"
-  resolved "https://registry.npmjs.org/@armoury/fivem-framework-common/-/fivem-framework-common-1.0.31.tgz"
-  integrity sha512-DOpKxf/bHBi5IMXypgqebxvhUnaMESFPaB3En5pXyP0BYGFXI3MhmcNNWI9cibnoiJIHX0xRkoU4zAAzIhZqlg==
+"@armoury/fivem-framework-common@^1.0.49", "@armoury/fivem-framework-common@1.0.49":
+  version "1.0.49"
+  resolved "https://registry.npmjs.org/@armoury/fivem-framework-common/-/fivem-framework-common-1.0.49.tgz"
+  integrity sha512-fPr8BshEL1OX4AQyH7ITs9YDJmDCiufYFmni0x6BqPcJvzhyFJJomVMMHPZiM9WwLnY6lWNQPZoFUZ4Y55GTGQ==
   dependencies:
     injection-js "^2.4.0"
     luaparse "^0.3.1"
     reflect-metadata "^0.2.1"
 
-"@armoury/fivem-framework-common@1.0.37":
-  version "1.0.37"
-  resolved "https://registry.npmjs.org/@armoury/fivem-framework-common/-/fivem-framework-common-1.0.37.tgz"
-  integrity sha512-X/j2ZKz30OR74w/Ov0Duq6t1D39n5pjQfqPdCTtsGVOXT13qn1hjlEp8J5wMVo91zmWJBdVWVPKC6avcPpA7Pg==
-  dependencies:
-    injection-js "^2.4.0"
-    luaparse "^0.3.1"
-    reflect-metadata "^0.2.1"
-
-"@armoury/fivem-framework-server@^1.0.31", "@armoury/fivem-framework-server@^1.0.37":
-  version "1.0.37"
-  resolved "https://registry.npmjs.org/@armoury/fivem-framework-server/-/fivem-framework-server-1.0.37.tgz"
-  integrity sha512-FKmHxxWEpbDLDzrm5/sL/IXEftrJXqgQhmGa4fdLQKDpCL5dzRXcEm6rUk3NMUlvs6+GUxIgmfaAOfz9QNI4mg==
+"@armoury/fivem-framework-server@^1.0.49":
+  version "1.0.49"
+  resolved "https://registry.npmjs.org/@armoury/fivem-framework-server/-/fivem-framework-server-1.0.49.tgz"
+  integrity sha512-KrmUEgPfDCObV/LOzRQyIeovVD4RXZw2oz6jq+YmfGUZ941rpLFya3gMJp3Zp9By1lSUMHr8jkTjouMAwhBbXg==
   dependencies:
     injection-js "^2.4.0"
     reflect-metadata "^0.2.1"
     rxjs "^7.8.1"
 
-"@armoury/fivem-roleplay-gamemode-client@^1.0.36":
-  version "1.0.36"
-  resolved "https://registry.npmjs.org/@armoury/fivem-roleplay-gamemode-client/-/fivem-roleplay-gamemode-client-1.0.36.tgz"
-  integrity sha512-OwQZvPlSZrjO5Mqg69VAN+Tevkf+3fc6nVQgsINoTsN6338YWfGyZ5gQVlQ7QwcWZbmvHUwG1ebcSo0I1tpm6w==
+"@armoury/fivem-roleplay-gamemode-client@^1.0.53":
+  version "1.0.53"
+  resolved "https://registry.npmjs.org/@armoury/fivem-roleplay-gamemode-client/-/fivem-roleplay-gamemode-client-1.0.53.tgz"
+  integrity sha512-fyP+YBXCgc9BsBCte36jx19kkK9uRmC+6RJl7KLFe7Ldjvzw0bVAHAlwlh+HSyY6IEIL/mzNZWkcyLLrzcnB+w==
   dependencies:
     injection-js "^2.4.0"
 
-"@armoury/fivem-roleplay-gamemode-common@1.0.36":
-  version "1.0.36"
-  resolved "https://registry.npmjs.org/@armoury/fivem-roleplay-gamemode-common/-/fivem-roleplay-gamemode-common-1.0.36.tgz"
-  integrity sha512-EufUoq5GMLFmr4akj8G2E3u17LYOYRUz4iQB/FS/2LZaTIiaQhBMaDSvWsW7QacJ/0q/2mQxdjzFF3e4u2y+XQ==
+"@armoury/fivem-roleplay-gamemode-common@1.0.53":
+  version "1.0.53"
+  resolved "https://registry.npmjs.org/@armoury/fivem-roleplay-gamemode-common/-/fivem-roleplay-gamemode-common-1.0.53.tgz"
+  integrity sha512-knLaeyKHhsImE+AM6vUWs2XmcZWxR+32Pve3E+T11Klih/W4TZtgdSwSq8EGg6oP7RaSJ2WyMPS8nbyuhDcNmw==
 
-"@armoury/fivem-roleplay-gamemode-server@^1.0.36":
-  version "1.0.36"
-  resolved "https://registry.npmjs.org/@armoury/fivem-roleplay-gamemode-server/-/fivem-roleplay-gamemode-server-1.0.36.tgz"
-  integrity sha512-eeIRN9QHhPaDEgsOsYqPocECjpgAjdzGx3KzXPRL+VeDBp5whhN095uptUduOoA+0Jt+sPhvawBX8k01Unx3Bg==
+"@armoury/fivem-roleplay-gamemode-server@^1.0.53":
+  version "1.0.53"
+  resolved "https://registry.npmjs.org/@armoury/fivem-roleplay-gamemode-server/-/fivem-roleplay-gamemode-server-1.0.53.tgz"
+  integrity sha512-ZvKVlTvO82rUHJ7e36FYp9kS8afJK6P36tAmuW0UD3oMhLm5d7t3nXgxuxW3kfhVWntqRCe6AGz0IT61Dridmg==
   dependencies:
     clone-deep "^4.0.1"
     injection-js "^2.4.0"
@@ -463,15 +445,15 @@ argparse@^2.0.1:
   version "1.0.0"
   resolved "file:src/client"
   dependencies:
-    "@armoury/fivem-framework-client" "^1.0.27"
-    "@armoury/fivem-roleplay-gamemode-client" "^1.0.36"
+    "@armoury/fivem-framework-client" "^1.0.49"
+    "@armoury/fivem-roleplay-gamemode-client" "^1.0.52"
 
 "armoury-fivem-roleplay-gamemode-resource-server@file:D:\\txData\\FiveMBasicServerCFXDefault_C90346.base\\resources\\[armoury]\\armoury-roleplay\\src\\server":
   version "1.0.0"
   resolved "file:src/server"
   dependencies:
-    "@armoury/fivem-framework-server" "^1.0.27"
-    "@armoury/fivem-roleplay-gamemode-server" "^1.0.36"
+    "@armoury/fivem-framework-server" "^1.0.49"
+    "@armoury/fivem-roleplay-gamemode-server" "^1.0.52"
 
 array-includes@^3.1.4:
   version "3.1.4"
@@ -538,13 +520,31 @@ buffer-from@^1.0.0:
   resolved "https://registry.npmjs.org/buffer-from/-/buffer-from-1.1.2.tgz"
   integrity sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==
 
-call-bind@^1.0.0, call-bind@^1.0.2:
+call-bind-apply-helpers@^1.0.1, call-bind-apply-helpers@^1.0.2:
   version "1.0.2"
-  resolved "https://registry.npmjs.org/call-bind/-/call-bind-1.0.2.tgz"
-  integrity sha512-7O+FbCihrB5WGbFYesctwmTKae6rOiIzmz1icreWJ+0aA7LJfuqhEso2T9ncpcFtzMQtzXf2QGGueWJGTYsqrA==
+  resolved "https://registry.npmjs.org/call-bind-apply-helpers/-/call-bind-apply-helpers-1.0.2.tgz"
+  integrity sha512-Sp1ablJ0ivDkSzjcaJdxEunN5/XvksFJ2sMBFfq6x0ryhQV/2b/KwFe21cMpmHtPOSij8K99/wSfoEuTObmuMQ==
   dependencies:
-    function-bind "^1.1.1"
-    get-intrinsic "^1.0.2"
+    es-errors "^1.3.0"
+    function-bind "^1.1.2"
+
+call-bind@^1.0.0, call-bind@^1.0.2, call-bind@^1.0.8:
+  version "1.0.9"
+  resolved "https://registry.npmjs.org/call-bind/-/call-bind-1.0.9.tgz"
+  integrity sha512-a/hy+pNsFUTR+Iz8TCJvXudKVLAnz/DyeSUo10I5yvFDQJBFU2s9uqQpoSrJlroHUKoKqzg+epxyP9lqFdzfBQ==
+  dependencies:
+    call-bind-apply-helpers "^1.0.2"
+    es-define-property "^1.0.1"
+    get-intrinsic "^1.3.0"
+    set-function-length "^1.2.2"
+
+call-bound@^1.0.4:
+  version "1.0.4"
+  resolved "https://registry.npmjs.org/call-bound/-/call-bound-1.0.4.tgz"
+  integrity sha512-+ys997U96po4Kx/ABpBCqhA9EuxJaQWDQg7295H4hBphv3IZg0boBKuwYpt4YXp6MZ5AmZQnU/tyMTlRpaSejg==
+  dependencies:
+    call-bind-apply-helpers "^1.0.2"
+    get-intrinsic "^1.3.0"
 
 callsites@^3.0.0:
   version "3.1.0"
@@ -640,12 +640,23 @@ deep-is@^0.1.3:
   resolved "https://registry.npmjs.org/deep-is/-/deep-is-0.1.4.tgz"
   integrity sha512-oIPzksmTg4/MriiaYGO+okXDT7ztn/w3Eptv/+gSIdMdKsJo0u4CfYNFJPy+4SKMuCqGw2wxnA+URMg3t8a/bQ==
 
-define-properties@^1.1.3:
-  version "1.1.3"
-  resolved "https://registry.npmjs.org/define-properties/-/define-properties-1.1.3.tgz"
-  integrity sha512-3MqfYKj2lLzdMSf8ZIZE/V+Zuy+BgD6f164e8K2w7dgnpKArBDerGYpM46IYYcjnkdPNMjPk9A6VFB8+3SKlXQ==
+define-data-property@^1.0.1, define-data-property@^1.1.4:
+  version "1.1.4"
+  resolved "https://registry.npmjs.org/define-data-property/-/define-data-property-1.1.4.tgz"
+  integrity sha512-rBMvIzlpA8v6E+SJZoo++HAYqsLrkg7MSfIinMPFhmkorw7X+dOXVJQs+QT69zGkzMyfDnIMN2Wid1+NbL3T+A==
   dependencies:
-    object-keys "^1.0.12"
+    es-define-property "^1.0.0"
+    es-errors "^1.3.0"
+    gopd "^1.0.1"
+
+define-properties@^1.1.3, define-properties@^1.2.1:
+  version "1.2.1"
+  resolved "https://registry.npmjs.org/define-properties/-/define-properties-1.2.1.tgz"
+  integrity sha512-8QmQKqEASLd5nx0U1B1okLElbUuuttJ/AnYmRXbbbGDWh6uS208EjD4Xqq/I9wK7u0v6O08XhTWnt5XtEbR6Dg==
+  dependencies:
+    define-data-property "^1.0.1"
+    has-property-descriptors "^1.0.0"
+    object-keys "^1.1.1"
 
 dir-glob@^3.0.1:
   version "3.0.1"
@@ -667,6 +678,15 @@ doctrine@^3.0.0:
   integrity sha512-yS+Q5i3hBf7GBkd4KG8a7eBNNWNGLTaEwwYWUijIYM7zrlYDM0BFXHjjPWlWZ1Rg7UaddZeIDmi9jF3HmqiQ2w==
   dependencies:
     esutils "^2.0.2"
+
+dunder-proto@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/dunder-proto/-/dunder-proto-1.0.1.tgz"
+  integrity sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==
+  dependencies:
+    call-bind-apply-helpers "^1.0.1"
+    es-errors "^1.3.0"
+    gopd "^1.2.0"
 
 electron-to-chromium@^1.4.668:
   version "1.4.673"
@@ -712,10 +732,27 @@ es-abstract@^1.19.0, es-abstract@^1.19.1:
     string.prototype.trimstart "^1.0.4"
     unbox-primitive "^1.0.1"
 
+es-define-property@^1.0.0, es-define-property@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/es-define-property/-/es-define-property-1.0.1.tgz"
+  integrity sha512-e3nRfgfUZ4rNGL232gUgX06QNyyez04KdjFrF+LTRoOXmrOgFKDg4BCdsjW8EnT69eqdYGmRpJwiPVYNrCaW3g==
+
+es-errors@^1.3.0:
+  version "1.3.0"
+  resolved "https://registry.npmjs.org/es-errors/-/es-errors-1.3.0.tgz"
+  integrity sha512-Zf5H2Kxt2xjTvbJvP2ZWLEICxA6j+hAmMzIlypy4xcBg1vKVnx89Wy0GbS+kf5cwCVFFzdCFh2XSCFNULS6csw==
+
 es-module-lexer@^1.2.1:
   version "1.4.1"
   resolved "https://registry.npmjs.org/es-module-lexer/-/es-module-lexer-1.4.1.tgz"
   integrity sha512-cXLGjP0c4T3flZJKQSuziYoq7MlT+rnvfZjfp7h+I7K9BNX54kP9nyWvdbwjQ4u1iWbOL4u96fgeZLToQlZC7w==
+
+es-object-atoms@^1.0.0, es-object-atoms@^1.1.1:
+  version "1.1.2"
+  resolved "https://registry.npmjs.org/es-object-atoms/-/es-object-atoms-1.1.2.tgz"
+  integrity sha512-HWcBoN6NileqtSydK2FqHbS/LoDd2pqrnQHLyJzBj4kOp/ky2MWMN694xOfkK8/SnUsW2DH7EfyVlydKCsm1Zw==
+  dependencies:
+    es-errors "^1.3.0"
 
 es-to-primitive@^1.2.1:
   version "1.2.1"
@@ -1011,24 +1048,39 @@ fs.realpath@^1.0.0:
   resolved "https://registry.npmjs.org/fs.realpath/-/fs.realpath-1.0.0.tgz"
   integrity sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==
 
-function-bind@^1.1.1:
-  version "1.1.1"
-  resolved "https://registry.npmjs.org/function-bind/-/function-bind-1.1.1.tgz"
-  integrity sha512-yIovAzMX49sF8Yl58fSCWJ5svSLuaibPxXQJFLmBObTuCr0Mf1KiPopGM9NiFjiYBCbfaa2Fh6breQ6ANVTI0A==
+function-bind@^1.1.1, function-bind@^1.1.2:
+  version "1.1.2"
+  resolved "https://registry.npmjs.org/function-bind/-/function-bind-1.1.2.tgz"
+  integrity sha512-7XHNxH7qX9xG5mIwxkhumTox/MIRNcOgDrxWsMt2pAr23WHp6MrRlN7FBSFpCpr+oVO0F744iUgR82nJMfG2SA==
 
 functional-red-black-tree@^1.0.1:
   version "1.0.1"
   resolved "https://registry.npmjs.org/functional-red-black-tree/-/functional-red-black-tree-1.0.1.tgz"
   integrity sha1-GwqzvVU7Kg1jmdKcDj6gslIHgyc=
 
-get-intrinsic@^1.0.2, get-intrinsic@^1.1.0, get-intrinsic@^1.1.1:
-  version "1.1.1"
-  resolved "https://registry.npmjs.org/get-intrinsic/-/get-intrinsic-1.1.1.tgz"
-  integrity sha512-kWZrnVM42QCiEA2Ig1bG8zjoIMOgxWwYCEeNdwY6Tv/cOSeGpcoX4pXHfKUxNKVoArnrEr2e9srnAxxGIraS9Q==
+get-intrinsic@^1.0.2, get-intrinsic@^1.1.0, get-intrinsic@^1.1.1, get-intrinsic@^1.2.4, get-intrinsic@^1.3.0:
+  version "1.3.0"
+  resolved "https://registry.npmjs.org/get-intrinsic/-/get-intrinsic-1.3.0.tgz"
+  integrity sha512-9fSjSaos/fRIVIp+xSJlE6lfwhES7LNtKaCBIamHsjr2na1BiABJPo0mOjjz8GJDURarmCPGqaiVg5mfjb98CQ==
   dependencies:
-    function-bind "^1.1.1"
-    has "^1.0.3"
-    has-symbols "^1.0.1"
+    call-bind-apply-helpers "^1.0.2"
+    es-define-property "^1.0.1"
+    es-errors "^1.3.0"
+    es-object-atoms "^1.1.1"
+    function-bind "^1.1.2"
+    get-proto "^1.0.1"
+    gopd "^1.2.0"
+    has-symbols "^1.1.0"
+    hasown "^2.0.2"
+    math-intrinsics "^1.1.0"
+
+get-proto@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/get-proto/-/get-proto-1.0.1.tgz"
+  integrity sha512-sTSfBjoXBp89JvIKIefqw7U2CCebsc74kiY6awiGogKtoSGbgjYE/G/+l9sF3MWFPNc9IcoOC4ODfKHfxFmp0g==
+  dependencies:
+    dunder-proto "^1.0.1"
+    es-object-atoms "^1.0.0"
 
 get-symbol-description@^1.0.0:
   version "1.0.0"
@@ -1088,6 +1140,11 @@ globby@^11.0.4:
     merge2 "^1.4.1"
     slash "^3.0.0"
 
+gopd@^1.0.1, gopd@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.npmjs.org/gopd/-/gopd-1.2.0.tgz"
+  integrity sha512-ZUKRh6/kUFoAiTAtTYPZJ3hw9wNxx+BIBOijnlG9PnrJsCcSjs1wyyD6vJpaYtgnzDrKYRSqf3OO6Rfa93xsRg==
+
 graceful-fs@^4.1.2, graceful-fs@^4.2.4, graceful-fs@^4.2.9:
   version "4.2.9"
   resolved "https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.2.9.tgz"
@@ -1103,10 +1160,17 @@ has-flag@^4.0.0:
   resolved "https://registry.npmjs.org/has-flag/-/has-flag-4.0.0.tgz"
   integrity sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==
 
-has-symbols@^1.0.1, has-symbols@^1.0.2:
-  version "1.0.3"
-  resolved "https://registry.npmjs.org/has-symbols/-/has-symbols-1.0.3.tgz"
-  integrity sha512-l3LCuF6MgDNwTDKkdYGEihYjt5pRPbEg46rtlmnSPlUbgmB8LOIrKJbYYFBSbnPaJexMKtiPO8hmeRjRz2Td+A==
+has-property-descriptors@^1.0.0, has-property-descriptors@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.npmjs.org/has-property-descriptors/-/has-property-descriptors-1.0.2.tgz"
+  integrity sha512-55JNKuIW+vq4Ke1BjOTjM2YctQIvCT7GFzHwmfZPGo5wnrgkid0YQtnAleFSqumZm4az3n2BS+erby5ipJdgrg==
+  dependencies:
+    es-define-property "^1.0.0"
+
+has-symbols@^1.0.1, has-symbols@^1.0.2, has-symbols@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.npmjs.org/has-symbols/-/has-symbols-1.1.0.tgz"
+  integrity sha512-1cDNdwJ2Jaohmb3sg4OmKaMBwuC48sYni5HUw2DvsC8LjGTLK9h+eb1X6RyuOHe4hT0ULCW68iomhjUoKUqlPQ==
 
 has-tostringtag@^1.0.0:
   version "1.0.0"
@@ -1121,6 +1185,13 @@ has@^1.0.3:
   integrity sha512-f2dvO0VU6Oej7RkWJGrehjbzMAjFp5/VKPp5tTpWIV4JHHZK1/BxbFRtf/siA2SWTe09caDmVtYYzWEIbBS4zw==
   dependencies:
     function-bind "^1.1.1"
+
+hasown@^2.0.2:
+  version "2.0.4"
+  resolved "https://registry.npmjs.org/hasown/-/hasown-2.0.4.tgz"
+  integrity sha512-T2UbfbBEF32wiepXIsMlTW9+dDYC6wMh/t/vYA4tuOMKqWz/n3vr1NFSxQiyP+zk2mXsoMA/i/7qV6LKut1t1A==
+  dependencies:
+    function-bind "^1.1.2"
 
 ignore@^5.1.8:
   version "5.2.0"
@@ -1297,6 +1368,11 @@ jest-worker@^27.4.5:
     merge-stream "^2.0.0"
     supports-color "^8.0.0"
 
+"js-tokens@^3.0.0 || ^4.0.0":
+  version "4.0.0"
+  resolved "https://registry.npmjs.org/js-tokens/-/js-tokens-4.0.0.tgz"
+  integrity sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==
+
 js-yaml@^4.1.0:
   version "4.1.0"
   resolved "https://registry.npmjs.org/js-yaml/-/js-yaml-4.1.0.tgz"
@@ -1371,6 +1447,13 @@ lodash.merge@^4.6.2:
   resolved "https://registry.npmjs.org/lodash.merge/-/lodash.merge-4.6.2.tgz"
   integrity sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==
 
+loose-envify@^1.0.0:
+  version "1.4.0"
+  resolved "https://registry.npmjs.org/loose-envify/-/loose-envify-1.4.0.tgz"
+  integrity sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==
+  dependencies:
+    js-tokens "^3.0.0 || ^4.0.0"
+
 lru-cache@^6.0.0:
   version "6.0.0"
   resolved "https://registry.npmjs.org/lru-cache/-/lru-cache-6.0.0.tgz"
@@ -1382,6 +1465,11 @@ luaparse@^0.3.1:
   version "0.3.1"
   resolved "https://registry.npmjs.org/luaparse/-/luaparse-0.3.1.tgz"
   integrity sha512-b21h2bFEbtGXmVqguHogbyrMAA0wOHyp9u/rx+w6Yc9pW1t9YjhGUsp87lYcp7pFRqSWN/PhFkrdIqKEUzRjjQ==
+
+math-intrinsics@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.npmjs.org/math-intrinsics/-/math-intrinsics-1.1.0.tgz"
+  integrity sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==
 
 merge-stream@^2.0.0:
   version "2.0.0"
@@ -1445,6 +1533,15 @@ neo-async@^2.6.2:
   resolved "https://registry.npmjs.org/neo-async/-/neo-async-2.6.2.tgz"
   integrity sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==
 
+node-polyglot@2.6.0:
+  version "2.6.0"
+  resolved "https://registry.npmjs.org/node-polyglot/-/node-polyglot-2.6.0.tgz"
+  integrity sha512-ZZFkaYzIfGfBvSM6QhA9dM8EEaUJOVewzGSRcXWbJELXDj0lajAtKaENCYxvF5yE+TgHg6NQb0CmgYMsMdcNJQ==
+  dependencies:
+    hasown "^2.0.2"
+    object.entries "^1.1.8"
+    warning "^4.0.3"
+
 node-releases@^2.0.14:
   version "2.0.14"
   resolved "https://registry.npmjs.org/node-releases/-/node-releases-2.0.14.tgz"
@@ -1455,7 +1552,7 @@ object-inspect@^1.11.0, object-inspect@^1.9.0:
   resolved "https://registry.npmjs.org/object-inspect/-/object-inspect-1.12.0.tgz"
   integrity sha512-Ho2z80bVIvJloH+YzRmpZVQe87+qASmBUKZDWgx9cu+KDrX2ZDH/3tMy+gXbZETVGs2M8YdxObOh7XAtim9Y0g==
 
-object-keys@^1.0.12, object-keys@^1.1.1:
+object-keys@^1.1.1:
   version "1.1.1"
   resolved "https://registry.npmjs.org/object-keys/-/object-keys-1.1.1.tgz"
   integrity sha512-NuAESUOUMrlIXOfHKzD6bpPu3tYt3xvjNdRIQ+FeT0lNb4K8WR70CaDxhuNguS2XG+GjkyMwOzsN5ZktImfhLA==
@@ -1470,14 +1567,15 @@ object.assign@^4.1.2:
     has-symbols "^1.0.1"
     object-keys "^1.1.1"
 
-object.entries@^1.1.5:
-  version "1.1.5"
-  resolved "https://registry.npmjs.org/object.entries/-/object.entries-1.1.5.tgz"
-  integrity sha512-TyxmjUoZggd4OrrU1W66FMDG6CuqJxsFvymeyXI51+vQLN67zYfZseptRge703kKQdo4uccgAKebXFcRCzk4+g==
+object.entries@^1.1.5, object.entries@^1.1.8:
+  version "1.1.9"
+  resolved "https://registry.npmjs.org/object.entries/-/object.entries-1.1.9.tgz"
+  integrity sha512-8u/hfXFRBD1O0hPUjioLhoWFHRmt6tKA4/vZPyckBr18l1KE9uHrFaFaUi8MDRTpi4uak2goyPTSNJLXX2k2Hw==
   dependencies:
-    call-bind "^1.0.2"
-    define-properties "^1.1.3"
-    es-abstract "^1.19.1"
+    call-bind "^1.0.8"
+    call-bound "^1.0.4"
+    define-properties "^1.2.1"
+    es-object-atoms "^1.1.1"
 
 object.values@^1.1.5:
   version "1.1.5"
@@ -1684,6 +1782,18 @@ serialize-javascript@^6.0.1:
   integrity sha512-Saa1xPByTTq2gdeFZYLLo+RFE35NHZkAbqZeWNd3BpzppeVisAqpDjcp8dyf6uIvEqJRd46jemmyA4iFIeVk8g==
   dependencies:
     randombytes "^2.1.0"
+
+set-function-length@^1.2.2:
+  version "1.2.2"
+  resolved "https://registry.npmjs.org/set-function-length/-/set-function-length-1.2.2.tgz"
+  integrity sha512-pgRc4hJ4/sNjWCSS9AmnS40x3bNMDTknHgL5UaMBTMyJnU90EgWh1Rz+MC9eFu4BuN/UwZjKQuY/1v3rM7HMfg==
+  dependencies:
+    define-data-property "^1.1.4"
+    es-errors "^1.3.0"
+    function-bind "^1.1.2"
+    get-intrinsic "^1.2.4"
+    gopd "^1.0.1"
+    has-property-descriptors "^1.0.2"
 
 shallow-clone@^3.0.0:
   version "3.0.1"
@@ -1933,6 +2043,13 @@ v8-compile-cache@^2.0.3:
   version "2.3.0"
   resolved "https://registry.npmjs.org/v8-compile-cache/-/v8-compile-cache-2.3.0.tgz"
   integrity sha512-l8lCEmLcLYZh4nbunNZvQCJc5pv7+RCwa8q/LdUx8u7lsWvPDKmpodJAJNwkAhJC//dFY48KuIEmjtd4RViDrA==
+
+warning@^4.0.3:
+  version "4.0.3"
+  resolved "https://registry.npmjs.org/warning/-/warning-4.0.3.tgz"
+  integrity sha512-rpJyN222KWIvHJ/F53XSZv0Zl/accqHR8et1kpaMTD/fLCRxtV8iX8czMzY7sVZupTI3zcUTg8eycS2kNF9l6w==
+  dependencies:
+    loose-envify "^1.0.0"
 
 watchpack@^2.4.0:
   version "2.4.0"

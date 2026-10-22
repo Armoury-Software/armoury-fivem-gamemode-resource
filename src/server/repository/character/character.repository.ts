@@ -10,6 +10,7 @@ export class CharacterRepository {
     const result = await this._db.instance.query_async(
       `SELECT
         c.*,
+        p.id as persistableId,
         p.lastKnownPosX AS lastLocationPosX,
         p.lastKnownPosY AS lastLocationPosY,
         p.lastKnownPosZ AS lastLocationPosZ,
@@ -38,6 +39,7 @@ export class CharacterRepository {
     const result = await this._db.instance.query_async(
       `SELECT
         c.*,
+        p.id as persistableId,
         p.lastKnownPosX AS lastLocationPosX,
         p.lastKnownPosY AS lastLocationPosY,
         p.lastKnownPosZ AS lastLocationPosZ,
@@ -73,7 +75,7 @@ export class CharacterRepository {
   }
 
   private rowToCharacter(row: any): Character {
-    return new Character(
+    const character = new Character(
       row.id,
       row.accountId,
       row.hoursPlayed,
@@ -84,5 +86,9 @@ export class CharacterRepository {
       { x: row.lastLocationRotX, y: row.lastLocationRotY, z: row.lastLocationRotZ },
       new Date()
     );
+
+    character.persistableId = Number(row.persistableId);
+
+    return character;
   }
 }

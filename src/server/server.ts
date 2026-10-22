@@ -9,6 +9,8 @@ import { CharacterRepository } from './repository/character/character.repository
 import { CharacterService } from './service/character/character.service';
 import { PersistableRepository } from './repository/persistable/persistable.repository';
 import { PersistableService } from './service/persistable/persistable.service';
+import { StashRepository } from './repository/stash/stash.repository';
+import { StashService } from './service/stash/stash.service';
 
 bootstrap(Server, {
   eager: [
@@ -19,5 +21,7 @@ bootstrap(Server, {
     PersistableRepository,
     PersistableService,
     PedPopulationConfig,
+    StashService,
   ],
+  providers: [StashRepository],
 });
