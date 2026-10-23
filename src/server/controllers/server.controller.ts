@@ -1,12 +1,18 @@
 import { Controller, Export } from '@armoury/fivem-framework-server';
-import { type IItemBase } from '@armoury/fivem-roleplay-gamemode-server';
+
+// The cache only needs registration metadata, independent of an item's implementation.
+interface CachedItem {
+  identifier: string;
+  weightPerUnit: number;
+  fullyOccupiesSlot: boolean;
+}
 
 @Controller()
 export class Server {
-  private readonly _itemCache: IItemBase[] = [];
+  private readonly _itemCache: CachedItem[] = [];
 
   @Export()
-  public addToItemCache(...items: IItemBase[]): void {
+  public addToItemCache(...items: CachedItem[]): void {
     items.forEach((item) => {
       const existingCachedItem = this._itemCache.find((cachedItem) => cachedItem.identifier === item.identifier);
       if (existingCachedItem) {
@@ -25,7 +31,7 @@ export class Server {
   }
 
   @Export()
-  public getCachedItems(): IItemBase[] {
+  public getCachedItems(): CachedItem[] {
     return this._itemCache;
   }
 }

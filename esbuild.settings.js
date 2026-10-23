@@ -1,114 +1,84 @@
-const esbuild = require('esbuild');
+﻿const esbuild = require('esbuild');
 const esbuildPluginTsc = require('esbuild-plugin-tsc');
-const fs = require('fs');
+const fs = require('fs/promises');
+const path = require('path');
 
 const clientFilePath = 'dist/client/dist.client.js';
 const serverFilePath = 'dist/server/dist.server.js';
 
-const config = (entryPoint, outputFile, platform) => ({
+const cleanupPlugin = (outputFile) => ({
+    name: 'fivem-native-names',
+    setup(build) {
+        build.onEnd(async (result) => {
+            if (result.errors.length) return;
+
+            const filePath = path.join(__dirname, outputFile);
+            const data = await fs.readFile(filePath, 'utf8');
+            // The framework declares natives under Cfx; FiveM exposes them as globals.
+            const modifiedContent = data
+                .replace(/Cfx\.Client\./g, '')
+                .replace(/Cfx\.Server\./g, '')
+                .replace(/Cfx\./g, '');
+            await fs.writeFile(filePath, modifiedContent, 'utf8');
+            console.log(`[Armoury:] Built ${outputFile}`);
+        });
+    },
+});
+
+const config = (entryPoint, outputFile, server = false) => ({
+    absWorkingDir: __dirname,
+    tsconfig: path.join(__dirname, 'tsconfig.json'),
     entryPoints: [entryPoint],
     bundle: true,
     outfile: outputFile,
-    ...(platform && { platform }),
+    platform: server ? 'node' : 'browser',
+    format: server ? 'cjs' : 'iife',
+    // FiveM loads resource scripts in a context containing native-binding globals.
+    // CommonJS output alone does not supply Node's module wrapper in that context.
+    ...(server && {
+        banner: { js: '(() => {' },
+        footer: { js: '})();' },
+    }),
+    target: server ? 'node22' : 'es2020',
     plugins: [
+        // Keep metadata emission enabled in both production and watch builds.
         esbuildPluginTsc({
+            tsconfigPath: path.join(__dirname, 'tsconfig.json'),
             force: true,
         }),
+        cleanupPlugin(outputFile),
     ],
     minifyWhitespace: true,
-    minifyIdentifiers: false, // Minifying identifiers is disabled because of issues with the NUI callback listener
+    minifyIdentifiers: false, // NUI callback listeners depend on function names.
     minifySyntax: true,
 });
 
-async function bundle() {
-    await esbuild.build(config('src/client/client.ts', clientFilePath));
-    await esbuild.build(config('src/server/server.ts', serverFilePath, 'node'));
-}
+async function main() {
+    const configs = [
+        config('src/client/client.ts', clientFilePath),
+        config('src/server/server.ts', serverFilePath, true),
+    ];
 
-const clientPlugins = [
-    {
-        name: 'client-watch-plugin',
-        setup(build) {
-            let buildIndex = 0;
-            build.onEnd(() => {
-                cleanup(
-                    clientFilePath,
-                    buildIndex == 0
-                        ? '[Armoury:] Client file watch mode begins..'
-                        : '[Armoury:] Modifications detected. Recompiling resource..'
-                );
-                buildIndex++;
-            });
-        },
-    },
-];
-
-const serverPlugins = [
-    {
-        name: 'server-watch-plugin',
-        setup(build) {
-            let buildIndex = 0;
-            build.onEnd(() => {
-                cleanup(
-                    serverFilePath,
-                    buildIndex == 0
-                        ? '[Armoury:] Server file watch mode begins..'
-                        : '[Armoury:] Modifications detected. Recompiling resource..'
-                );
-                buildIndex++;
-            });
-        },
-    },
-];
-
-async function watch() {
-    await (
-        await esbuild.context({
-            ...config('src/client/client.ts', clientFilePath),
-            plugins: clientPlugins,
-        })
-    ).watch();
-    await (
-        await esbuild.context({
-            ...config('src/server/server.ts', serverFilePath, 'node'),
-            plugins: serverPlugins,
-        })
-    ).watch();
-    console.log('Starting development in watch mode..');
-}
-
-function cleanup(filePath, message = 'Occurrences removed from file: ' + filePath) {
-    fs.readFile(filePath, 'utf8', (err, data) => {
-        if (err) {
-            console.error('Error reading file:', err);
-            return;
-        }
-
-        // Remove occurrences of "Cfx.Client." and "Cfx."
-        const modifiedContent = data
-            .replace(/Cfx\.Client\./g, '')
-            .replace(/Cfx\.Server\./g, '')
-            .replace(/Cfx\./g, '');
-
-        // Write the modified content back to the file
-        fs.writeFile(filePath, modifiedContent, 'utf8', (err) => {
-            if (err) {
-                console.error('Error writing file:', err);
-                return;
+    if (process.argv.includes('--watch')) {
+        const contexts = [];
+        try {
+            for (const options of configs) {
+                contexts.push(await esbuild.context(options));
             }
-            console.log(message);
-        });
-    });
+            await Promise.all(contexts.map((context) => context.watch()));
+            console.log('[Armoury:] Development watch mode started.');
+        } catch (error) {
+            await Promise.all(contexts.map((context) => context.dispose()));
+            throw error;
+        }
+    } else {
+        for (const options of configs) {
+            await esbuild.build(options);
+        }
+    }
 }
 
-if (process.argv.includes('--watch')) {
-    watch();
-} else {
-    bundle()
-        .catch((error) => {
-            console.log(error);
-            process.exit(1);
-        })
-        .then(() => cleanup(clientFilePath))
-        .then(() => cleanup(serverFilePath));
-}
+main().catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+});

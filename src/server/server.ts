@@ -11,21 +11,30 @@ import { PersistableRepository } from './repository/persistable/persistable.repo
 import { PersistableService } from './service/persistable/persistable.service';
 import { StashRepository } from './repository/stash/stash.repository';
 import { StashService } from './service/stash/stash.service';
-import { StashChangeInteraction } from './service/stash/interaction/stash-change.interaction';
 import { StashWatcher } from './service/stash/stash.watcher';
+import { StashReorderInteraction } from './service/stash/interaction/stash-reorder.interaction';
 
 bootstrap(Server, {
   eager: [
+    /** Account */
     AccountRepository,
     AccountService,
+
+    /** Character */
     CharacterRepository,
     CharacterService,
+
+    /** Persistable */
     PersistableRepository,
     PersistableService,
-    PedPopulationConfig,
+    
+    /** Stash */
     StashService,
-    StashChangeInteraction,
     StashWatcher,
+    StashReorderInteraction,
+
+    /** Misc */
+    PedPopulationConfig,
   ],
   providers: [StashRepository],
 });

@@ -7,20 +7,22 @@
     "dependencies": {},
     "scripts": {
         "dev": "node esbuild.settings.js --watch",
-        "build": "prettier --write . && node esbuild.settings.js",
+        "build": "npm run typecheck && node esbuild.settings.js",
+        "typecheck": "tsc --project tsconfig.json --noEmit",
+        "format": "prettier --write .",
         "lint": "eslint -c .eslintrc.json --ext .ts src",
         "lint:init": "eslint --init"
     },
     "author": "",
     "license": "ISC",
     "devDependencies": {
-        "@types/node": "^20.11.19",
-        "@typescript-eslint/eslint-plugin": "^5.14.0",
-        "@typescript-eslint/parser": "^5.14.0",
+        "@types/node": "^22.20.5",
+        "@typescript-eslint/eslint-plugin": "^8.72.0",
+        "@typescript-eslint/parser": "^8.72.0",
         "clone-deep": "^4.0.1",
-        "esbuild": "^0.20.1",
-        "esbuild-plugin-tsc": "^0.4.0",
-        "eslint": "^8.11.0",
+        "esbuild": "^0.28.2",
+        "esbuild-plugin-tsc": "^0.6.0",
+        "eslint": "^8.57.1",
         "eslint-config-airbnb-base": "^15.0.0",
         "eslint-plugin-import": "^2.25.4",
         "injection-js": "^2.4.0",
@@ -29,7 +31,7 @@
         "rxjs": "^7.8.1",
         "string-replace-loader": "^3.1.0",
         "ts-loader": "^9.5.1",
-        "typescript": "^5.3.3"
+        "typescript": "~6.0.3"
     },
     "browser": {},
     "workspaces": [
