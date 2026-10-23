@@ -28,6 +28,7 @@ type StashAction = StashReorderAction;
 interface StashChange {
   stashId: number;
   stashType: string;
+  revision: number;
   // All indices refer to the list before and after the drop. Actions describe
   // one change together; they are not sequential moveItemInArray instructions.
   actions: StashAction[];

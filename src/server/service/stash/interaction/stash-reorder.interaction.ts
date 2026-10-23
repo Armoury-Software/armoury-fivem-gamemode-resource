@@ -12,14 +12,54 @@ export class StashReorderInteraction implements StashInteraction {
   ) {}
 
   public speculate(changes: StashChange, snapshot: Stash): StashInteractionResult {
-    // TODO: Validations
+    if (changes.stashId !== snapshot.id || changes.stashType !== snapshot.type) {
+      throw new Error('Stash change does not match the snapshot.');
+    }
+
+    const sources = new Set<number>();
+    const destinations = new Set<number>();
+    const actions = changes.actions.map(action => ({ ...action }));
+
+    for (const action of actions) {
+      if (
+        !action
+        || action.type !== StashActions.Reorder
+        || !Number.isSafeInteger(action.previousIndex)
+        || !Number.isSafeInteger(action.currentIndex)
+        || action.previousIndex < 0
+        || action.currentIndex < 0
+        || action.previousIndex >= snapshot.maxSlots
+        || action.currentIndex >= snapshot.maxSlots
+        || sources.has(action.previousIndex)
+        || destinations.has(action.currentIndex)
+      ) {
+        throw new Error('Invalid stash reorder action.');
+      }
+
+      sources.add(action.previousIndex);
+      destinations.add(action.currentIndex);
+    }
+
+    for (const destination of destinations) {
+      if (!sources.has(destination)) {
+        throw new Error('Incomplete stash reorder permutation.');
+      }
+    }
+
     // TODO: Ask all relevant resources: is this allowed to be done?
-    // TODO: Throw if anything here is wrong
+
+    // Read every source from the original layout, including empty slots.
+    const slots = snapshot.slots.slice();
+    for (const action of actions) {
+      const slot = snapshot.slots[action.previousIndex];
+      slots[action.currentIndex] = slot == null ? null : { ...slot, slotIndex: action.currentIndex };
+    }
+    snapshot.slots = slots;
 
     return {
       needsResync: false,
       speculation: snapshot,
-      async: () => this._repository.reorderSlots(snapshot.id, changes.actions)
+      async: () => this._repository.reorderSlots(snapshot.id, actions)
     }
   }
 

@@ -22,12 +22,20 @@ export class StashWatcher {
     this._stashes.playerAllowedToStash$.subscribe(this.onPlayerAllowedToStash.bind(this));
     this._stashes.playerDisallowedFromStash$.subscribe(this.onPlayerDisallowedFromStash.bind(this));
 
-    this._interactions.set(StashActions.Reorder, reorder);
+    this._interactions = new Map([
+      [StashActions.Reorder, reorder]
+    ]);
   }
 
   @EventListener({ eventName: 'armoury-roleplay:unsafe:stash:changed', direction: EVENT_DIRECTIONS.CLIENT_TO_SERVER })
   protected _onChangesMadeToStashUnsafe(changes: StashChange): void {
-    if (!changes || !changes.actions?.length || !Array.isArray(changes.actions)) {
+    if (
+      !changes
+      || !Number.isSafeInteger(changes.stashId)
+      || typeof changes.stashType !== 'string'
+      || !Array.isArray(changes.actions)
+      || changes.actions.length === 0
+    ) {
       return;
     }
   
@@ -59,12 +67,33 @@ export class StashWatcher {
       return;
     }
 
-    const action: StashActions = changes.actions[0].type;
-    const speculation = watch.getLatestSpeculation();
-
     try {
-      const result = this._interactions.get(action).speculate(changes, speculation);
-      watch.commit(speculation, playerId);
+      for (const action of changes.actions) {
+        if (
+          !action
+          || typeof action !== 'object'
+          || action.type !== StashActions.Reorder
+          || !Number.isSafeInteger(action.previousIndex)
+          || !Number.isSafeInteger(action.currentIndex)
+          || action.previousIndex < 0
+          || action.currentIndex < 0
+        ) {
+          throw new Error('Invalid stash action.');
+        }
+      }
+
+      const interaction = this._interactions.get(changes.actions[0].type);
+      if (!interaction) {
+        throw new Error('Unsupported stash action.');
+      }
+
+      const speculation = watch.getLatestSpeculation();
+      if (!speculation) {
+        throw new Error('Stash snapshot is unavailable.');
+      }
+
+      const result = interaction.speculate(changes, speculation);
+      watch.commit(result.speculation, result.async, playerId);
 
       if (result.needsResync) {
         watch.resync(playerId);
@@ -79,9 +108,21 @@ export class StashWatcher {
   }
 
   private onPlayerAllowedToStash([playerId, toStashId]: [number, number]): void {
+    let stashIds = this._playerIdsToStashIds.get(playerId);
+    if (!stashIds) {
+      stashIds = new Set<number>();
+      this._playerIdsToStashIds.set(playerId, stashIds);
+    }
+    stashIds.add(toStashId);
+
     let watch = this._stashWatches.get(toStashId);
     if (watch == null) {
-      watch = new StashWatch();
+      watch = new StashWatch(toStashId, this._stashes, () => {
+        if (watch.isStale()) {
+          watch.destroy();
+          this._stashWatches.delete(toStashId);
+        }
+      });
       this._stashWatches.set(toStashId, watch);
     }
 
@@ -89,6 +130,12 @@ export class StashWatcher {
   }
 
   private onPlayerDisallowedFromStash([playerId, fromStashId]: [number, number]): void {
+    const stashIds = this._playerIdsToStashIds.get(playerId);
+    stashIds?.delete(fromStashId);
+    if (stashIds?.size === 0) {
+      this._playerIdsToStashIds.delete(playerId);
+    }
+
     const watch = this._stashWatches.get(fromStashId);
     if (watch == null) {
       return;
@@ -96,7 +143,7 @@ export class StashWatcher {
 
     watch.dismiss(playerId);
     if (watch.isStale()) {
-      watch.destroy(); // TODO: Don't directly destroy here - if the queue is still running, wait for it to end. (without blocking the thread)
+      watch.destroy();
       this._stashWatches.delete(fromStashId);
     }
   }
@@ -113,7 +160,7 @@ export class StashWatcher {
       watch.dismiss(playerId);
 
       if (watch.isStale()) {
-        watch.destroy(); // TODO: Don't directly destroy here - if the queue is still running, wait for it to end. (without blocking the thread)
+        watch.destroy();
         this._stashWatches.delete(stashId);
       }
     }
@@ -140,28 +187,75 @@ class StashWatch {
    * and the StashService's stash gets updated with the speculated version.
   */
   private readonly _queue = new Queue<RevisionSpeculation>();
+  private _processing = false;
 
-  public commit(speculation: Stash, triggererPlayerId: number): void {
-    this._queue.enqueue({
+  public constructor(
+    private readonly _stashId: number,
+    private readonly _stashes: StashService,
+    private readonly _onIdle: () => void,
+  ) {}
+
+  public commit(speculation: Stash, asyncCall: () => Promise<void>, triggererPlayerId: number): void {
+    const queueItem: RevisionSpeculation = {
       revision: this._revisions.generate(),
-      speculation
-    });
+      speculation,
+      async: asyncCall,
+    };
+    this._queue.enqueue(queueItem);
 
-    for (const playerId of this._playerIds) {
-      if (playerId == triggererPlayerId) {
-        this.notify(playerId);
-      } else {
-        this.resync(playerId, speculation);
+    try {
+      for (const playerId of this._playerIds) {
+        if (playerId == triggererPlayerId) {
+          this.notify(playerId, queueItem);
+        } else {
+          this.resync(playerId, speculation);
+        }
       }
+    } finally {
+      // Start processing even if sending an optimistic notification fails.
+      void this.processQueue();
+    }
+  }
+
+  private async processQueue(): Promise<void> {
+    if (this._processing) {
+      return;
+    }
+
+    this._processing = true;
+
+    try {
+      let item: RevisionSpeculation | undefined;
+      // Keep the active item queued so new changes can speculate from it.
+      while ((item = this._queue.peek()) !== undefined) {
+        await item.async();
+        this._stashes.stashes.set(this._stashId, item.speculation);
+        this._queue.dequeue();
+      }
+    } catch (error) {
+      this._queue.clear();
+      // Invalidate the failed speculation and every revision based on it.
+      this._revisions.generate();
+      console.error(`Failed to commit stash (id: ${this._stashId}). Pending changes discarded.`, error);
+      this.resyncForAll();
+    } finally {
+      this._processing = false;
+      this._onIdle();
     }
   }
 
   public resync(playerId: number, speculation?: Stash): void {
-    if (!(speculation ??= this._queue.peekTail()?.speculation)) {
+    const latestQueueItem = this._queue.peekTail();
+    if (!(speculation ??= latestQueueItem?.speculation ?? this._stashes.stashes.get(this._stashId))) {
       return;
     }
 
-    Cfx.emitNet('armoury-roleplay:safe:stash:resync', playerId, Stash.toStub(speculation));
+    Cfx.emitNet(
+      'armoury-roleplay:safe:stash:resync',
+      playerId,
+      latestQueueItem?.revision ?? this._revisions.get(),
+      Stash.toStub(speculation)
+    );
   }
 
   public resyncForAll(speculation?: Stash): void {
@@ -171,7 +265,7 @@ class StashWatch {
   }
 
   public getLatestSpeculation(): Stash | null {
-    const speculation = this._queue.peekTail()?.speculation;
+    const speculation = this._queue.peekTail()?.speculation ?? this._stashes.stashes.get(this._stashId);
     if (!speculation) {
       return null;
     }
@@ -179,9 +273,13 @@ class StashWatch {
     return structuredClone(speculation);
   }
 
-  private notify(playerId: number): void {
-    // TODO: notify all players from watch about the new revision
-    throw new Error('Not yet implemented');
+  private notify(playerId: number, queueItem: RevisionSpeculation): void {
+    Cfx.emitNet(
+      'armoury-roleplay:safe:stash:revision:new',
+      playerId,
+      Stash.toStub(queueItem.speculation),
+      queueItem.revision,
+    );
   }
 
   public compare(playerRevision: number): boolean {
@@ -201,7 +299,7 @@ class StashWatch {
   }
 
   public isStale(): boolean {
-    return this._playerIds.size == 0;
+    return this._playerIds.size == 0 && !this._processing && this._queue.size == 0;
   }
 
   public destroy(): void {
@@ -213,6 +311,7 @@ class StashWatch {
 type RevisionSpeculation = {
   revision: number;
   speculation: Stash;
+  async: () => Promise<void>;
 };
 
 class RevisionGenerator {
@@ -315,7 +414,7 @@ class Queue<T> {
   }
 
   public peekTail(): T | undefined {
-    return this.items.get(this.tail);
+    return this.items.get(this.tail - 1);
   }
 
   public get size(): number {
