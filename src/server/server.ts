@@ -12,6 +12,7 @@ import { PersistableService } from './service/persistable/persistable.service';
 import { StashRepository } from './repository/stash/stash.repository';
 import { StashService } from './service/stash/stash.service';
 import { StashChangeInteraction } from './service/stash/interaction/stash-change.interaction';
+import { StashWatcher } from './service/stash/stash.watcher';
 
 bootstrap(Server, {
   eager: [
@@ -24,6 +25,7 @@ bootstrap(Server, {
     PedPopulationConfig,
     StashService,
     StashChangeInteraction,
+    StashWatcher,
   ],
   providers: [StashRepository],
 });

@@ -10,7 +10,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "@armoury/fivem-framework-server": "^1.0.49",
-    "@armoury/fivem-roleplay-gamemode-server": "^1.0.53"
+    "@armoury/fivem-framework-server": "^1.0.54",
+    "@armoury/fivem-roleplay-gamemode-server": "^1.0.54"
   }
 }

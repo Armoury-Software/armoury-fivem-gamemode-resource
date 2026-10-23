@@ -2,49 +2,49 @@
 # yarn lockfile v1
 
 
-"@armoury/fivem-framework-client@^1.0.49":
-  version "1.0.49"
-  resolved "https://registry.npmjs.org/@armoury/fivem-framework-client/-/fivem-framework-client-1.0.49.tgz"
-  integrity sha512-9PmcSZehHItZMxucxEmKVaK1wrTpQcMODkCXNvRf52bzSaoNWZBmlb/w4Cftft4r+tPjaXQlRqa8kLlcUn0kKw==
+"@armoury/fivem-framework-client@^1.0.54", "@armoury/fivem-framework-client@1.0.54":
+  version "1.0.54"
+  resolved "https://registry.npmjs.org/@armoury/fivem-framework-client/-/fivem-framework-client-1.0.54.tgz"
+  integrity sha512-VglU17ZuQM2JY/TfZkLnc5Ar3bkWwujJU2TceGMuul7eJHWL9g3VDvpKL1OG7uGCUa9GVcmEaVj5TjPzQU7sxQ==
   dependencies:
     injection-js "^2.4.0"
     reflect-metadata "^0.2.1"
     rxjs "^7.8.1"
 
-"@armoury/fivem-framework-common@^1.0.49", "@armoury/fivem-framework-common@1.0.49":
-  version "1.0.49"
-  resolved "https://registry.npmjs.org/@armoury/fivem-framework-common/-/fivem-framework-common-1.0.49.tgz"
-  integrity sha512-fPr8BshEL1OX4AQyH7ITs9YDJmDCiufYFmni0x6BqPcJvzhyFJJomVMMHPZiM9WwLnY6lWNQPZoFUZ4Y55GTGQ==
+"@armoury/fivem-framework-common@1.0.54":
+  version "1.0.54"
+  resolved "https://registry.npmjs.org/@armoury/fivem-framework-common/-/fivem-framework-common-1.0.54.tgz"
+  integrity sha512-J/j33xoHJX5uMRR9JECZ8iECxvGuj+F/mRijZqkUHKlefd8KppscPom+AU5b0+kdFRwcHP2W+hthxmG3l9juMQ==
   dependencies:
     injection-js "^2.4.0"
     luaparse "^0.3.1"
     reflect-metadata "^0.2.1"
 
-"@armoury/fivem-framework-server@^1.0.49":
-  version "1.0.49"
-  resolved "https://registry.npmjs.org/@armoury/fivem-framework-server/-/fivem-framework-server-1.0.49.tgz"
-  integrity sha512-KrmUEgPfDCObV/LOzRQyIeovVD4RXZw2oz6jq+YmfGUZ941rpLFya3gMJp3Zp9By1lSUMHr8jkTjouMAwhBbXg==
+"@armoury/fivem-framework-server@^1.0.54", "@armoury/fivem-framework-server@1.0.54":
+  version "1.0.54"
+  resolved "https://registry.npmjs.org/@armoury/fivem-framework-server/-/fivem-framework-server-1.0.54.tgz"
+  integrity sha512-HlXKtwdlW1J/WFrkxlIpuURWUlr9yHB1xqW/hYtCSMVytGjBrN2V2FbWc104H57FmUIoxogMj1Y03TD0MvXIIg==
   dependencies:
     injection-js "^2.4.0"
     reflect-metadata "^0.2.1"
     rxjs "^7.8.1"
 
-"@armoury/fivem-roleplay-gamemode-client@^1.0.53":
-  version "1.0.53"
-  resolved "https://registry.npmjs.org/@armoury/fivem-roleplay-gamemode-client/-/fivem-roleplay-gamemode-client-1.0.53.tgz"
-  integrity sha512-fyP+YBXCgc9BsBCte36jx19kkK9uRmC+6RJl7KLFe7Ldjvzw0bVAHAlwlh+HSyY6IEIL/mzNZWkcyLLrzcnB+w==
+"@armoury/fivem-roleplay-gamemode-client@^1.0.54":
+  version "1.0.54"
+  resolved "https://registry.npmjs.org/@armoury/fivem-roleplay-gamemode-client/-/fivem-roleplay-gamemode-client-1.0.54.tgz"
+  integrity sha512-lotlLdRISfjwVjSyx4Hw39wVcy8MjwniGUIoDdj0rGk5PoUhqo7BQ1kNaMyptg98KfFFin/XkaI7ADO9iqZU1Q==
   dependencies:
     injection-js "^2.4.0"
 
-"@armoury/fivem-roleplay-gamemode-common@1.0.53":
-  version "1.0.53"
-  resolved "https://registry.npmjs.org/@armoury/fivem-roleplay-gamemode-common/-/fivem-roleplay-gamemode-common-1.0.53.tgz"
-  integrity sha512-knLaeyKHhsImE+AM6vUWs2XmcZWxR+32Pve3E+T11Klih/W4TZtgdSwSq8EGg6oP7RaSJ2WyMPS8nbyuhDcNmw==
+"@armoury/fivem-roleplay-gamemode-common@1.0.54":
+  version "1.0.54"
+  resolved "https://registry.npmjs.org/@armoury/fivem-roleplay-gamemode-common/-/fivem-roleplay-gamemode-common-1.0.54.tgz"
+  integrity sha512-10aZboxgiSZaRtoEfRfPJ93qSmDBkEE7VL1qNaOkiktbTsMHw3Od0z8txr6nS2CQKg2hEYkGhXb/qhsUvZhlJg==
 
-"@armoury/fivem-roleplay-gamemode-server@^1.0.53":
-  version "1.0.53"
-  resolved "https://registry.npmjs.org/@armoury/fivem-roleplay-gamemode-server/-/fivem-roleplay-gamemode-server-1.0.53.tgz"
-  integrity sha512-ZvKVlTvO82rUHJ7e36FYp9kS8afJK6P36tAmuW0UD3oMhLm5d7t3nXgxuxW3kfhVWntqRCe6AGz0IT61Dridmg==
+"@armoury/fivem-roleplay-gamemode-server@^1.0.54":
+  version "1.0.54"
+  resolved "https://registry.npmjs.org/@armoury/fivem-roleplay-gamemode-server/-/fivem-roleplay-gamemode-server-1.0.54.tgz"
+  integrity sha512-yMRXEkBX2TPftAxY9+g/XvdHOY+q6GUijBKsVnw+0aTqesu5Oa/pDHpJKxYczqxNM1PqHH5WQvIxj817OiSvdA==
   dependencies:
     clone-deep "^4.0.1"
     injection-js "^2.4.0"
@@ -445,15 +445,15 @@ argparse@^2.0.1:
   version "1.0.0"
   resolved "file:src/client"
   dependencies:
-    "@armoury/fivem-framework-client" "^1.0.49"
-    "@armoury/fivem-roleplay-gamemode-client" "^1.0.52"
+    "@armoury/fivem-framework-client" "^1.0.54"
+    "@armoury/fivem-roleplay-gamemode-client" "^1.0.53"
 
 "armoury-fivem-roleplay-gamemode-resource-server@file:D:\\txData\\FiveMBasicServerCFXDefault_C90346.base\\resources\\[armoury]\\armoury-roleplay\\src\\server":
   version "1.0.0"
   resolved "file:src/server"
   dependencies:
-    "@armoury/fivem-framework-server" "^1.0.49"
-    "@armoury/fivem-roleplay-gamemode-server" "^1.0.52"
+    "@armoury/fivem-framework-server" "^1.0.54"
+    "@armoury/fivem-roleplay-gamemode-server" "^1.0.53"
 
 array-includes@^3.1.4:
   version "3.1.4"

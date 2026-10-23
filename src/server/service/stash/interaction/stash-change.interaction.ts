@@ -5,9 +5,7 @@ import { StashService } from '../stash.service';
 
 @Injectable()
 export class StashChangeInteraction {
-  public constructor(
-    private readonly _stashes: StashService,
-  ) {}
+  public constructor(private readonly _stashes: StashService) {}
 
   @EventListener({ eventName: 'armoury-roleplay:unsafe:stash:changed', direction: EVENT_DIRECTIONS.CLIENT_TO_SERVER })
   protected _onChangesMadeToStashUnsafe(changes: StashChange): void {
