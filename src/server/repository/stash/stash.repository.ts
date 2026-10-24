@@ -28,12 +28,11 @@ export class StashRepository {
       [persistable.id, type, maxSlots, maxWeight]
     );
 
-    // TODO: Do class instantiation
     return {
       id,
       type,
       maxSlots,
-      maxWeight: maxWeight ?? Infinity,
+      maxWeight: maxWeight ?? Number.MAX_SAFE_INTEGER,
       owningPersistableId: persistable.id,
       slots: new Array(maxSlots).fill(null),
     };
@@ -105,20 +104,10 @@ export class StashRepository {
 
   public async reorderSlots(
     stashId: number,
+    maxSlots: number,
     actions: StashReorderAction[],
   ): Promise<void> {
     if (actions.length === 0) return;
-
-    const rows = await this._db.instance.query_async(
-      'SELECT maxSlots FROM stashes WHERE id = ?',
-      [stashId]
-    );
-
-    if (rows.length !== 1) {
-      throw new Error('Stash not found.');
-    }
-
-    const maxSlots: number = rows[0].maxSlots;
 
     const sources = new Set<number>();
     const destinations = new Set<number>();

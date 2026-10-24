@@ -59,7 +59,7 @@ export class StashReorderInteraction implements StashInteraction {
     return {
       needsResync: false,
       speculation: snapshot,
-      async: () => this._repository.reorderSlots(snapshot.id, actions)
+      async: () => this._repository.reorderSlots(snapshot.id, snapshot.maxSlots, actions)
     }
   }
 

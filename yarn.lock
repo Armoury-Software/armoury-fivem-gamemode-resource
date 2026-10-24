@@ -497,6 +497,7 @@ argparse@^2.0.1:
   dependencies:
     "@armoury/fivem-framework-server" "^1.0.55"
     "@armoury/fivem-roleplay-gamemode-server" "^1.0.54"
+    lru-cache "^11.5.3"
 
 array-includes@^3.1.4:
   version "3.1.4"
@@ -1490,6 +1491,11 @@ loose-envify@^1.0.0:
   integrity sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==
   dependencies:
     js-tokens "^3.0.0 || ^4.0.0"
+
+lru-cache@^11.5.3:
+  version "11.5.3"
+  resolved "https://registry.npmjs.org/lru-cache/-/lru-cache-11.5.3.tgz"
+  integrity sha512-U4N8FgzmWxc8k1VH8Kr6lQg18U7Fjvby6wXHVRX/ZZ7IwWbRMgrRbP0Wrb5q5NVinryp4SQampHKdvtecItxUg==
 
 lru-cache@^6.0.0:
   version "6.0.0"

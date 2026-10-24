@@ -46,6 +46,7 @@ export class StashWatcher {
       watch == null
       || !this._playerIdsToStashIds.get(playerId)?.has(changes.stashId)
       || !watch.has(playerId)
+      || !this._stashes.hasAccessToStash(playerId, changes.stashId)
     ) {
       // TODO: Emit some sort of event so that the client gets any UI closed and any cached data purged
       return;
@@ -277,8 +278,8 @@ class StashWatch {
     Cfx.emitNet(
       'armoury-roleplay:safe:stash:revision:new',
       playerId,
-      Stash.toStub(queueItem.speculation),
       queueItem.revision,
+      queueItem.speculation.id, // OR: Stash.toStub(queueItem.speculation), if needed
     );
   }
 

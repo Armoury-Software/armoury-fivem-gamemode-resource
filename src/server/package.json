@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@armoury/fivem-framework-server": "^1.0.55",
-    "@armoury/fivem-roleplay-gamemode-server": "^1.0.56"
+    "@armoury/fivem-roleplay-gamemode-server": "^1.0.56",
+    "lru-cache": "^11.5.3"
   }
 }

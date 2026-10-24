@@ -1,6 +1,7 @@
 import { EventListener, Export } from '@armoury/fivem-framework-server';
 import { type Stash } from '@armoury/fivem-roleplay-gamemode-server';
 import { Injectable } from 'injection-js';
+import { LRUCache } from 'lru-cache';
 
 import { StashRepository } from '../../repository/stash/stash.repository';
 import { Subject } from 'rxjs';
@@ -8,7 +9,26 @@ import { Subject } from 'rxjs';
 @Injectable()
 export class StashService {
   public readonly stashes = new Map<number, Stash>();
-  public readonly playerStashAllowance = new Map<number, Set<number>>();
+  private static readonly STASH_ACCESS_IDLE_TTL = 5 * 60 * 1000;
+
+  public readonly playerStashAllowance = new LRUCache<number, Set<number>>({
+    ttl: StashService.STASH_ACCESS_IDLE_TTL,
+    ttlAutopurge: true,
+    updateAgeOnGet: true,
+    disposeAfter: (stashIds, playerId, reason) => {
+      // Replacing a player's set while granting access does not revoke it.
+      if (reason === 'set') {
+        return;
+      }
+
+      for (const stashId of stashIds) {
+        this._playerDisallowedFromStash$.next([playerId, stashId]);
+        if (reason === 'expire') {
+          this.onStashAccessExpired(playerId, stashId);
+        }
+      }
+    },
+  });
 
   private readonly _playerAllowedToStash$ = new Subject<[number, number]>();
   public get playerAllowedToStash$() { return this._playerAllowedToStash$.asObservable(); }
@@ -20,11 +40,25 @@ export class StashService {
 
   // TODO: public async createInWorldSpace
 
+  /** Only successful access checks refresh the player's inactivity timeout. */
+  @Export()
+  public hasAccessToStash(playerId: number, stashId: number): boolean {
+    const allowance = this.playerStashAllowance.get(playerId, { updateAgeOnGet: false });
+    if (!allowance?.has(stashId)) {
+      return false;
+    }
+
+    this.playerStashAllowance.get(playerId);
+    return true;
+  }
+
+  protected onStashAccessExpired(playerId: number, stashId: number): void {}
+
   /**
    * Before a player can make any change to a stash, they need to be allowed
    * access to that stash.
    * Access to a stash is not permanent, and it is revoked as soon as they
-   * stop interaction with that stash.
+   * explicitly close it or their stash access expires through inactivity.
    * @param playerId the playerId (NOT characterId/principal!)
    * @param toStashId the stashId the player is going to be allowed to use
    */
@@ -37,7 +71,7 @@ export class StashService {
         `was requested to be allowed to stash (id: ${toStashId}), but they already were`,
         'allowed to it. This should never happen. Doing nothing..'
       );
-      return;
+      return false;
     }
 
     this.playerStashAllowance.set(
@@ -47,6 +81,7 @@ export class StashService {
 
     this._playerAllowedToStash$.next([playerId, toStashId]);
     console.log(`Player (id: ${playerId}) has received access to stash (id: ${toStashId})!`);
+    return true;
   }
 
   /**
@@ -59,24 +94,25 @@ export class StashService {
    */
   @Export()
   public disallowAccessToStash(playerId: number, fromStashId: number): boolean {
-    const allowance = this.playerStashAllowance.get(playerId);
+    const allowance = this.playerStashAllowance.get(playerId, { updateAgeOnGet: false });
     if (!allowance?.has(fromStashId)) {
       console.warn(
         `Player [${Cfx.Server.GetPlayerName(playerId.toString())} (playerId: ${playerId})]`,
         `was requested to be disallowed from stash (id: ${fromStashId}), but they never even`,
         'were allowed to it. This should never happen. Doing nothing..'
       );
-      return;
+      return false;
     }
 
     allowance.delete(fromStashId);
-    this._playerDisallowedFromStash$.next([playerId, fromStashId]);
-
     if (!allowance.size) {
       this.playerStashAllowance.delete(playerId);
     }
 
+    this._playerDisallowedFromStash$.next([playerId, fromStashId]);
+
     console.log(`Player (id: ${playerId}) has been revoked access to stash (id: ${fromStashId})!`);
+    return true;
   }
 
   @Export()
@@ -172,11 +208,7 @@ export class StashService {
   @EventListener()
   protected onPlayerDisconnect(): void {
     const playerId = Cfx.source;
-    if (this.playerStashAllowance.has(playerId)) {
-      for (const stashId of this.playerStashAllowance.get(playerId)!) {
-        this.disallowAccessToStash(playerId, stashId);
-      }
-
+    if (this.playerStashAllowance.delete(playerId)) {
       console.log(
         `Player [${Cfx.Server.GetPlayerName(playerId.toString())} (playerId: ${playerId})]`,
         'has disconnected, and their access to stashes has been released.'
