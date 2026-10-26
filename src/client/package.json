@@ -11,6 +11,6 @@
   },
   "dependencies": {
     "@armoury/fivem-framework-client": "^1.0.55",
-    "@armoury/fivem-roleplay-gamemode-client": "^1.0.56"
+    "@armoury/fivem-roleplay-gamemode-client": "^1.0.59"
   }
 }

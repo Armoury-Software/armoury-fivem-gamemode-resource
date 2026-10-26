@@ -54,6 +54,7 @@ export class StashRepository {
         s.maxWeight,
         ss.itemIdentifier,
         ss.amount,
+        ss.metadata,
         ss.slotIndex
       FROM stashes s
       LEFT JOIN stashes_slots ss ON ss.stashId = s.id
@@ -81,12 +82,14 @@ export class StashRepository {
       }
 
       if (row.slotIndex !== null) {
-        stash.slots![row.slotIndex] = {
+        const slot = {
           stashId: row.id,
           itemIdentifier: row.itemIdentifier,
           amount: row.amount,
           slotIndex: row.slotIndex,
+          metadata: typeof row.metadata === 'string' ? JSON.parse(row.metadata) : row.metadata ?? null,
         };
+        stash.slots![row.slotIndex] = slot;
       }
     }
 
@@ -102,106 +105,39 @@ export class StashRepository {
     return this.fetch(...rows.map((row: { id: number }) => row.id));
   }
 
-  public async reorderSlots(
-    stashId: number,
-    maxSlots: number,
-    actions: StashReorderAction[],
-  ): Promise<void> {
-    if (actions.length === 0) return;
-
-    const sources = new Set<number>();
-    const destinations = new Set<number>();
-
-    for (const action of actions) {
-      const { previousIndex, currentIndex } = action;
-
-      if (
-        action.type !== 'reorder' ||
-        !Number.isSafeInteger(previousIndex) ||
-        !Number.isSafeInteger(currentIndex) ||
-        previousIndex < 0 ||
-        currentIndex < 0 ||
-        previousIndex >= maxSlots ||
-        currentIndex >= maxSlots ||
-        sources.has(previousIndex) ||
-        destinations.has(currentIndex)
-      ) {
-        throw new Error('Invalid stash reorder action.');
-      }
-
-      sources.add(previousIndex);
-      destinations.add(currentIndex);
+  public async saveSlots(stash: Stash): Promise<void> {
+    if (!Array.isArray(stash.slots)) {
+      throw new Error(`Cannot save stash ${stash.id} without its slots.`);
     }
 
-    // Require a complete permutation of the affected indices.
-    for (const destination of destinations) {
-      if (!sources.has(destination)) {
-        throw new Error('Incomplete stash reorder permutation.');
+    const queries: Array<{ query: string; values: unknown[] }> = [
+      { query: 'DELETE FROM stashes_slots WHERE stashId = ?', values: [stash.id] },
+    ];
+    const placeholders: string[] = [];
+    const values: unknown[] = [];
+    for (let slotIndex = 0; slotIndex < stash.slots.length; slotIndex++) {
+      const slot = stash.slots[slotIndex] as (NonNullable<Stash['slots'][number]> & { metadata?: unknown }) | null;
+      if (slot == null) {
+        continue;
       }
+
+      placeholders.push('(?, ?, ?, ?, ?)');
+      values.push(
+        stash.id, slotIndex, slot.itemIdentifier, slot.amount,
+        slot.metadata == null ? null : JSON.stringify(slot.metadata)
+      );
     }
 
-    // Temporary indices start beyond the normal slot range.
-    const offset = maxSlots;
-
-    if (!Number.isSafeInteger(maxSlots * 2 - 1) ||
-        maxSlots * 2 - 1 > 2147483647) {
-      throw new Error('Stash slot range is too large.');
+    if (values.length > 0) {
+      queries.push({
+        query: `INSERT INTO stashes_slots (stashId, slotIndex, itemIdentifier, amount, metadata) VALUES ${placeholders.join(', ')}`,
+        values,
+      });
     }
 
-    const placeholders = actions.map(() => '?').join(', ');
-    const caseStatements = actions
-      .map(() => 'WHEN ? THEN ?')
-      .join(' ');
-
-    const sourceIndices = actions.map(a => a.previousIndex);
-
-    // Phase 1: Move occupied source slots into temporary space.
-    const temporaryQuery = `
-      UPDATE stashes_slots
-      SET slotIndex = slotIndex + ?
-      WHERE stashId = ?
-        AND slotIndex IN (${placeholders})
-    `;
-
-    // Phase 2: Move temporary slots to their final positions.
-    const finalQuery = `
-      UPDATE stashes_slots
-      SET slotIndex = CASE slotIndex
-        ${caseStatements}
-        ELSE slotIndex
-      END
-      WHERE stashId = ?
-        AND slotIndex IN (${placeholders})
-    `;
-
-    const success = await this._db.instance.transaction_async([
-      {
-        query: temporaryQuery,
-        values: [offset, stashId, ...sourceIndices]
-      },
-      {
-        query: finalQuery,
-        values: [
-          ...actions.flatMap(a => [
-            a.previousIndex + offset,
-            a.currentIndex
-          ]),
-          stashId,
-          ...sourceIndices.map(index => index + offset)
-        ]
-      }
-    ]);
-
-    if (!success) {
-      throw new Error('Failed to reorder stash slots.');
+    if (!await this._db.instance.transaction_async(queries)) {
+      throw new Error(`Failed to persist slots for stash ${stash.id}.`);
     }
   }
   
-}
-
-// TODO: Move to lib
-interface StashReorderAction {
-  type: 'reorder';
-  previousIndex: number;
-  currentIndex: number;
 }

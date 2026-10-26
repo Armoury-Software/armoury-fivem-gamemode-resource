@@ -1,5 +1,7 @@
 import { bootstrap } from '@armoury/fivem-roleplay-gamemode-server';
 
+import { enablePatches, enableArrayMethods, setAutoFreeze } from 'immer';
+
 import { Server } from './controllers/server.controller';
 
 import { PedPopulationConfig } from './config/ped-population.config';
@@ -12,7 +14,11 @@ import { PersistableService } from './service/persistable/persistable.service';
 import { StashRepository } from './repository/stash/stash.repository';
 import { StashService } from './service/stash/stash.service';
 import { StashWatcher } from './service/stash/stash.watcher';
-import { StashReorderInteraction } from './service/stash/interaction/stash-reorder.interaction';
+import { CrossStashSwapInteraction } from './service/stash/interaction/cross-stash-swap.interaction';
+import { SameStashSwapInteraction } from './service/stash/interaction/same-stash-swap.interaction';
+
+enablePatches();
+enableArrayMethods();
 
 bootstrap(Server, {
   eager: [
@@ -31,7 +37,8 @@ bootstrap(Server, {
     /** Stash */
     StashService,
     StashWatcher,
-    StashReorderInteraction,
+    CrossStashSwapInteraction,
+    SameStashSwapInteraction,
 
     /** Misc */
     PedPopulationConfig,

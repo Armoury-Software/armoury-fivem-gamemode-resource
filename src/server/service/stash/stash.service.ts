@@ -2,13 +2,14 @@ import { EventListener, Export } from '@armoury/fivem-framework-server';
 import { type Stash } from '@armoury/fivem-roleplay-gamemode-server';
 import { Injectable } from 'injection-js';
 import { LRUCache } from 'lru-cache';
+import { Subject } from 'rxjs';
 
 import { StashRepository } from '../../repository/stash/stash.repository';
-import { Subject } from 'rxjs';
+import { StashStore } from './stash.store';
 
 @Injectable()
 export class StashService {
-  public readonly stashes = new Map<number, Stash>();
+  public readonly stashes: StashStore;
   private static readonly STASH_ACCESS_IDLE_TTL = 5 * 60 * 1000;
 
   public readonly playerStashAllowance = new LRUCache<number, Set<number>>({
@@ -36,7 +37,9 @@ export class StashService {
   private readonly _playerDisallowedFromStash$ = new Subject<[number, number]>();
   public get playerDisallowedFromStash$() { return this._playerDisallowedFromStash$.asObservable(); }
 
-  public constructor(private readonly _repository: StashRepository) {}
+  public constructor(private readonly _repository: StashRepository) {
+    this.stashes = new StashStore(stash => this._repository.saveSlots(stash));
+  }
 
   // TODO: public async createInWorldSpace
 
@@ -143,7 +146,7 @@ export class StashService {
       const fetchedStashes = await this._repository.fetch(...missingIds);
 
       for (const stash of fetchedStashes) {
-        this.stashes.set(stash.id, stash);
+        this.stashes.load(stash);
       }
     }
 
@@ -179,12 +182,7 @@ export class StashService {
   @Export()
   public async findStashesByType(type: string, owningPersistableId?: number): Promise<Stash[]> {
     const stashes = await this._repository.fetchByType(type, owningPersistableId);
-
-    for (const stash of stashes) {
-      this.stashes.set(stash.id, stash);
-    }
-
-    return stashes;
+    return stashes.map(stash => this.stashes.load(stash));
   }
 
   @EventListener()
@@ -213,6 +211,22 @@ export class StashService {
         `Player [${Cfx.Server.GetPlayerName(playerId.toString())} (playerId: ${playerId})]`,
         'has disconnected, and their access to stashes has been released.'
       );
+    }
+  }
+
+  @Export()
+  public async flushPendingStashes(): Promise<void> {
+    await this.stashes.flush();
+  }
+
+  protected async onServerResourceStop(resourceName: string): Promise<void> {
+    if (resourceName === Cfx.Server.GetCurrentResourceName()) {
+      try {
+        /** Attempts deferring resource stopping through an export hack */
+        await this.flushPendingStashes();
+      } catch (error) {
+        console.error('[Armoury:] Failed to flush pending stashes during resource shutdown.', error);
+      }
     }
   }
 }

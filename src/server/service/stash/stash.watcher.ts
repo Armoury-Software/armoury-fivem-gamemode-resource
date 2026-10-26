@@ -1,11 +1,13 @@
 import { EVENT_DIRECTIONS, EventListener } from '@armoury/fivem-framework-server';
 import { Stash } from '@armoury/fivem-roleplay-gamemode-server';
 import { Injectable } from 'injection-js';
+import { createDraft, finishDraft, type Patch } from 'immer';
 import { randomInt } from 'node:crypto';
 
 import { StashService } from './stash.service';
 import { StashInteraction } from './interaction/stash.interaction';
-import { StashReorderInteraction } from './interaction/stash-reorder.interaction';
+import { SameStashSwapInteraction } from './interaction/same-stash-swap.interaction';
+import { CrossStashSwapInteraction } from './interaction/cross-stash-swap.interaction';
 
 @Injectable()
 export class StashWatcher {
@@ -13,96 +15,143 @@ export class StashWatcher {
   private _stashWatches = new Map<number, StashWatch>();
   private _playerIdsToStashIds = new Map<number, Set<number>>();
 
-  private readonly _interactions: Map<StashActions, StashInteraction>;
+  private readonly _interactions: Map<string/* TODO: Use valid typing, declared in shared lib */, StashInteraction>;
 
   public constructor(
     private readonly _stashes: StashService,
-    reorder: StashReorderInteraction,
+    swapInSameStash: SameStashSwapInteraction,
+    swapCrossStash: CrossStashSwapInteraction,
   ) {
     this._stashes.playerAllowedToStash$.subscribe(this.onPlayerAllowedToStash.bind(this));
     this._stashes.playerDisallowedFromStash$.subscribe(this.onPlayerDisallowedFromStash.bind(this));
 
     this._interactions = new Map([
-      [StashActions.Reorder, reorder]
+      ['same-stash-slot-swap', swapInSameStash],
+      ['cross-stash-slot-swap', swapCrossStash]
     ]);
   }
 
   @EventListener({ eventName: 'armoury-roleplay:unsafe:stash:changed', direction: EVENT_DIRECTIONS.CLIENT_TO_SERVER })
-  protected _onChangesMadeToStashUnsafe(changes: StashChange): void {
-    if (
-      !changes
-      || !Number.isSafeInteger(changes.stashId)
-      || typeof changes.stashType !== 'string'
-      || !Array.isArray(changes.actions)
-      || changes.actions.length === 0
-    ) {
-      return;
-    }
-  
+  protected _onChangesProposedToStashUnsafe(changes: any/* TODO: Replace with valid type */): void {
     const playerId = Cfx.source;
-    const watch = this._stashWatches.get(changes.stashId);
 
-    if (
-      watch == null
-      || !this._playerIdsToStashIds.get(playerId)?.has(changes.stashId)
-      || !watch.has(playerId)
-      || !this._stashes.hasAccessToStash(playerId, changes.stashId)
-    ) {
-      // TODO: Emit some sort of event so that the client gets any UI closed and any cached data purged
-      return;
-    }
+    let sourceWatch: StashWatch;
+    let targetWatch: StashWatch;
 
-    if (!watch.compare(changes.revision)) {
-      watch.resync(playerId);
-      return;
-    }
-
-    if (!this._stashes.stashes.has(changes.stashId)) {
-      console.error(
-        'Received stash change request from',
-        `Player [${Cfx.Server.GetPlayerName(playerId.toString())} (playerId: ${playerId})]`,
-        'but there was no stash registered with that ID even though the watch knew about',
-        'it. This should never happen. Operation was rejected.'
-      );
-      watch.resync(playerId);
-      return;
-    }
+    let sourceStash: Stash;
+    let targetStash: Stash;
 
     try {
-      for (const action of changes.actions) {
+      if (
+        !changes?.type || changes.sourceRevision == null ||
+        !Number.isSafeInteger(changes.sourceStashId) ||
+        !Number.isSafeInteger(changes.sourceRevision) ||
+        (changes.targetStashId != null && !Number.isSafeInteger(changes.targetStashId)) ||
+        (changes.targetStashId != null && !Number.isSafeInteger(changes.targetRevision))
+      ) {
+        throw new Error('Invalid changes object.');
+      }
+
+      const interaction = this._interactions.get(changes.type);
+      if (!interaction) {
+        throw new Error('Unknown interaction requested.');
+      }
+
+      sourceStash = this._stashes.stashes.get(changes.sourceStashId);
+      const hasDistinctTarget = changes.targetStashId != null
+        && changes.targetStashId !== changes.sourceStashId;
+
+      targetStash = hasDistinctTarget
+        ? this._stashes.stashes.get(changes.targetStashId!)
+        : undefined;
+
+      if (!sourceStash || (hasDistinctTarget && !targetStash)) {
+        throw new Error('Unknown stash ID.');
+      }
+
+      sourceWatch = this._stashWatches.get(sourceStash.id);
+      if (
+        sourceWatch == null
+        || !this._playerIdsToStashIds.get(playerId)?.has(sourceStash.id)
+        || !sourceWatch.has(playerId)
+        || !this._stashes.hasAccessToStash(playerId, sourceStash.id)
+      ) {
+        throw new Error('Unknown source watch or no access to source stash');
+      }
+
+      if (targetStash) {
+        targetWatch = this._stashWatches.get(targetStash.id);
         if (
-          !action
-          || typeof action !== 'object'
-          || action.type !== StashActions.Reorder
-          || !Number.isSafeInteger(action.previousIndex)
-          || !Number.isSafeInteger(action.currentIndex)
-          || action.previousIndex < 0
-          || action.currentIndex < 0
+          targetWatch == null
+          || !this._playerIdsToStashIds.get(playerId)?.has(targetStash.id)
+          || !targetWatch.has(playerId)
+          || !this._stashes.hasAccessToStash(playerId, targetStash.id)
         ) {
-          throw new Error('Invalid stash action.');
+          throw new Error('Unknown target watch or no access to target stash');
         }
       }
 
-      const interaction = this._interactions.get(changes.actions[0].type);
-      if (!interaction) {
-        throw new Error('Unsupported stash action.');
+      if (!sourceWatch.compare(changes.sourceRevision)) {
+        throw new Error('Outdated source revision');
       }
 
-      const speculation = watch.getLatestSpeculation();
-      if (!speculation) {
-        throw new Error('Stash snapshot is unavailable.');
+      if (targetStash && !targetWatch.compare(changes.targetRevision)) {
+        throw new Error('Outdated target revision');
       }
 
-      const result = interaction.speculate(changes, speculation);
-      watch.commit(result.speculation, result.async, playerId);
-
-      if (result.needsResync) {
-        watch.resync(playerId);
+      const recipes = interaction.resolve(changes, sourceStash, targetStash);
+      if (!recipes) {
+        throw new Error('Interaction validation failed.');
       }
+
+      const { sourceRecipe, targetRecipe } = recipes;
+
+      if (targetStash && !targetRecipe) {
+        throw new Error('Missing target recipe.');
+      }
+
+      let sourcePatches: Patch[];
+      let targetPatches: Patch[];
+
+      const sourceDraft = createDraft(sourceStash);
+      let nextSource: Stash;
+      try {
+        sourceRecipe(sourceDraft, changes);
+      } finally {
+        nextSource = finishDraft(
+          sourceDraft,
+          producedPatches => sourcePatches = producedPatches
+        );
+      }
+
+      let nextTarget: Stash | undefined;
+      if (targetStash) {
+        const targetDraft = createDraft(targetStash);
+        try {
+          targetRecipe!(targetDraft, changes);
+        } finally {
+          nextTarget = finishDraft(
+            targetDraft,
+            producedPatches => targetPatches = producedPatches
+          );
+        }
+      }
+
+      this._stashes.stashes.set(sourceStash.id, nextSource);
+      if (nextTarget) {
+        this._stashes.stashes.set(nextTarget.id, nextTarget);
+      }
+
+      sourceWatch.commit(sourcePatches, sourceStash, playerId);
+      targetWatch?.commit(targetPatches, targetStash, playerId);
     } catch (error) {
-      watch.resync(playerId); // TODO: Do we need to watch.resyncForAll here? Or just leave it as-is, with watch.resync?
-      console.error(error);
-      return;
+      if (sourceStash) {
+        sourceWatch.resync(playerId, sourceStash, changes.sourceRevision);
+      }
+
+      if (targetStash) {
+        targetWatch?.resync(playerId, targetStash, changes.targetRevision);
+      }
     }
 
     console.log(`Received changes from playerId ${playerId}:`, changes);
@@ -118,12 +167,7 @@ export class StashWatcher {
 
     let watch = this._stashWatches.get(toStashId);
     if (watch == null) {
-      watch = new StashWatch(toStashId, this._stashes, () => {
-        if (watch.isStale()) {
-          watch.destroy();
-          this._stashWatches.delete(toStashId);
-        }
-      });
+      watch = new StashWatch(toStashId);
       this._stashWatches.set(toStashId, watch);
     }
 
@@ -179,108 +223,41 @@ export class StashWatcher {
 }
 
 class StashWatch {
-  private readonly _playerIds = new Set<number>();
-  private readonly _revisions = new RevisionGenerator();
+  #stashId: number;
+  private readonly _playerIds: Set<number>;
+  private readonly _revisions: RevisionHistory;
 
-  /**
-   * Contains speculations of what Stashes may look like as a result of this revision
-   * When promises related to the speculation succeed, the speculation becomes truth,
-   * and the StashService's stash gets updated with the speculated version.
-  */
-  private readonly _queue = new Queue<RevisionSpeculation>();
-  private _processing = false;
-
-  public constructor(
-    private readonly _stashId: number,
-    private readonly _stashes: StashService,
-    private readonly _onIdle: () => void,
-  ) {}
-
-  public commit(speculation: Stash, asyncCall: () => Promise<void>, triggererPlayerId: number): void {
-    const queueItem: RevisionSpeculation = {
-      revision: this._revisions.generate(),
-      speculation,
-      async: asyncCall,
-    };
-    this._queue.enqueue(queueItem);
-
-    try {
-      for (const playerId of this._playerIds) {
-        if (playerId == triggererPlayerId) {
-          this.notify(playerId, queueItem);
-        } else {
-          this.resync(playerId, speculation);
-        }
-      }
-    } finally {
-      // Start processing even if sending an optimistic notification fails.
-      void this.processQueue();
-    }
+  public constructor(stashId: number) {
+    this.#stashId = stashId;
+    this._playerIds = new Set<number>();
+    this._revisions = new RevisionHistory();
   }
 
-  private async processQueue(): Promise<void> {
-    if (this._processing) {
-      return;
-    }
+  public commit(patches: Patch[], confirmedState: Stash, triggererPlayerId: number): void {
+    const revision = this._revisions.generate(patches);
 
-    this._processing = true;
-
-    try {
-      let item: RevisionSpeculation | undefined;
-      // Keep the active item queued so new changes can speculate from it.
-      while ((item = this._queue.peek()) !== undefined) {
-        await item.async();
-        this._stashes.stashes.set(this._stashId, item.speculation);
-        this._queue.dequeue();
-      }
-    } catch (error) {
-      this._queue.clear();
-      // Invalidate the failed speculation and every revision based on it.
-      this._revisions.generate();
-      console.error(`Failed to commit stash (id: ${this._stashId}). Pending changes discarded.`, error);
-      this.resyncForAll();
-    } finally {
-      this._processing = false;
-      this._onIdle();
-    }
-  }
-
-  public resync(playerId: number, speculation?: Stash): void {
-    const latestQueueItem = this._queue.peekTail();
-    if (!(speculation ??= latestQueueItem?.speculation ?? this._stashes.stashes.get(this._stashId))) {
-      return;
-    }
-
-    Cfx.emitNet(
-      'armoury-roleplay:safe:stash:resync',
-      playerId,
-      latestQueueItem?.revision ?? this._revisions.get(),
-      Stash.toStub(speculation)
-    );
-  }
-
-  public resyncForAll(speculation?: Stash): void {
     for (const playerId of this._playerIds) {
-      this.resync(playerId, speculation);
+      if (playerId == triggererPlayerId) {
+        this.notify(playerId, this.#stashId, revision);
+      } else {
+        this.resync(playerId, confirmedState, revision);
+      }
     }
   }
 
-  public getLatestSpeculation(): Stash | null {
-    const speculation = this._queue.peekTail()?.speculation ?? this._stashes.stashes.get(this._stashId);
-    if (!speculation) {
-      return null;
+  public resync(playerId: number, confirmedState: Stash, revision: number): void {
+    const patches = this._revisions.getDiff(revision);
+    if (patches != null) {
+      Cfx.emitNet('armoury-roleplay:safe:stash:resync', playerId, confirmedState.id, patches, revision);
+      return;
     }
-  
-    return structuredClone(speculation);
+
+    // Hard resets instead of resyncing
+    Cfx.emitNet('armoury-roleplay:safe:stash:reset', playerId, Stash.toStub(confirmedState), revision);
   }
 
-  private notify(playerId: number, queueItem: RevisionSpeculation): void {
-    Cfx.emitNet(
-      'armoury-roleplay:safe:stash:revision:new',
-      playerId,
-      queueItem.revision,
-      queueItem.speculation.id, // OR: Stash.toStub(queueItem.speculation), if needed
-    );
+  private notify(playerId: number, stashId: number, revision: number): void {
+    Cfx.emitNet('armoury-roleplay:safe:stash:revision:new', playerId, stashId, revision);
   }
 
   public compare(playerRevision: number): boolean {
@@ -300,7 +277,7 @@ class StashWatch {
   }
 
   public isStale(): boolean {
-    return this._playerIds.size == 0 && !this._processing && this._queue.size == 0;
+    return this._playerIds.size == 0;
   }
 
   public destroy(): void {
@@ -309,52 +286,74 @@ class StashWatch {
   }
 }
 
-type RevisionSpeculation = {
-  revision: number;
-  speculation: Stash;
-  async: () => Promise<void>;
-};
-
-class RevisionGenerator {
+class RevisionHistory {
   #sequence = 0;
   #current: number = NaN;
 
-  private readonly revisions = new Map<number, number>();
+  readonly #revisions = new Map<number, number>();
+  readonly #revisionsToPatches = new Map<number, Patch[]>();
 
   constructor(
-    private readonly maxHistory = 128,
+    private readonly _maxHistory = 64,
   ) {
-    if (!Number.isSafeInteger(maxHistory) || maxHistory < 1) {
+    if (!Number.isSafeInteger(_maxHistory) || _maxHistory < 1) {
       throw new RangeError('maxHistory must be a positive integer.');
     }
   }
 
   public get(): number { return this.#current; }
 
-  public generate(): number {
+  public generate(patches: Patch[]): number {
     let identifier: number;
 
     do {
       identifier = randomInt(0, 2 ** 48 - 1);
-    } while (this.revisions.has(identifier));
+    } while (this.#revisions.has(identifier));
 
-    this.revisions.set(identifier, ++this.#sequence);
+    this.#revisions.set(identifier, ++this.#sequence);
+    this.#revisionsToPatches.set(identifier, patches);
 
-    if (this.revisions.size > this.maxHistory) {
-      const oldest = this.revisions.keys().next().value!;
+    if (this.#revisions.size > this._maxHistory) {
+      const oldest = this.#revisions.keys().next().value!;
 
-      this.revisions.delete(oldest);
+      this.#revisions.delete(oldest);
+      this.#revisionsToPatches.delete(oldest);
     }
 
     return this.#current = identifier;
+  }
+
+  public getDiff(revision: number): Patch[] | null {
+    const sequence = this.#revisions.get(revision);
+    if (sequence === undefined) {
+      return null;
+    }
+
+    const patches: Patch[] = [];
+    for (const [identifier, revisionSequence] of this.#revisions) {
+      if (revisionSequence <= sequence) {
+        continue;
+      }
+
+      const batch = this.#revisionsToPatches.get(identifier);
+      if (batch === undefined) {
+        return null;
+      }
+
+      for (let i = 0; i < batch.length; i++) {
+        patches.push(batch[i]);
+      }
+    }
+
+    return patches;
   }
 
   public compare(
     identifier: number,
     currentIdentifier: number = this.#current,
   ): RevisionComparison {
-    const revision = this.revisions.get(identifier);
-    const currentRevision = this.revisions.get(currentIdentifier);
+    const revision = this.#revisions.get(identifier);
+    const currentRevision = this.#revisions.get(currentIdentifier);
 
     if (this.#sequence == 0 && isNaN(this.#current)) {
       return RevisionComparison.Equal;
@@ -377,7 +376,8 @@ class RevisionGenerator {
 
   public destroy(): void {
     this.#current = NaN;
-    this.revisions.clear();
+    this.#revisions.clear();
+    this.#revisionsToPatches.clear();
   }
 }
 
@@ -388,68 +388,10 @@ enum RevisionComparison {
   Newer = 'newer',
 }
 
-class Queue<T> {
-  private readonly items = new Map<number, T>();
-
-  private head = 0;
-  private tail = 0;
-
-  public enqueue(item: T): void {
-    this.items.set(this.tail++, item);
-  }
-
-  public dequeue(): T | undefined {
-    if (this.head === this.tail) {
-      return undefined;
-    }
-
-    const item = this.items.get(this.head);
-
-    this.items.delete(this.head++);
-
-    return item;
-  }
-
-  public peek(): T | undefined {
-    return this.items.get(this.head);
-  }
-
-  public peekTail(): T | undefined {
-    return this.items.get(this.tail - 1);
-  }
-
-  public get size(): number {
-    return this.tail - this.head;
-  }
-
-  public clear(): void {
-    this.items.clear();
-    this.head = 0;
-    this.tail = 0;
-  }
-}
-
 // TODO: Extract to gamemode lib
-enum StashActions {
-  Reorder = 'reorder',
-}
-
-// TODO: Extract to gamemode lib
-interface StashReorderAction {
-  type: StashActions.Reorder;
-  previousIndex: number;
-  currentIndex: number;
-}
-
-// TODO: Extract to gamemode lib
-type StashAction = StashReorderAction;
-
-// TODO: Extract to gamemode lib
-interface StashChange {
+export interface StashChange {
   stashId: number;
   stashType: string;
   revision: number;
-  // All indices refer to the list before and after the drop. Actions describe
-  // one change together; they are not sequential moveItemInArray instructions.
-  actions: StashAction[];
+  actions: Patch[];
 }
