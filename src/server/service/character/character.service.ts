@@ -87,7 +87,7 @@ export class CharacterService {
       this._spawnConfig.rotation
     );
 
-    const persistable = await this._persistableService.create(character.id, position, rotation);
+    const persistable = await this._persistableService.createPersistable(character.id, position, rotation);
     character.persistableId = persistable.id;
 
     return character;

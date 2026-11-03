@@ -6,6 +6,9 @@ import { Subject } from 'rxjs';
 
 import { StashRepository } from '../../repository/stash/stash.repository';
 import { StashStore } from './stash.store';
+import { ItemService } from './items/item.service';
+import { createDraft, finishDraft, produce } from 'immer';
+import { ServerOnlyAddItemInteraction } from './interaction/add-item.interaction';
 
 @Injectable()
 export class StashService {
@@ -37,11 +40,129 @@ export class StashService {
   private readonly _playerDisallowedFromStash$ = new Subject<[number, number]>();
   public get playerDisallowedFromStash$() { return this._playerDisallowedFromStash$.asObservable(); }
 
-  public constructor(private readonly _repository: StashRepository) {
+  public constructor(
+    private readonly _repository: StashRepository,
+    private readonly _items: ItemService,
+  ) {
     this.stashes = new StashStore(stash => this._repository.saveSlots(stash));
   }
 
   // TODO: public async createInWorldSpace
+
+  @Export()
+  public addItemToStash(stashId: number, itemIdentifier: string, amount: number): boolean {
+    // TODO: Run SQL query
+
+    if (!this.stashes.has(stashId)) {
+      console.warn(
+        `Tried to add ${amount} of '${itemIdentifier}' inside stash (id: ${stashId}),`,
+        'but there was no cached stash with that ID. This should never happen.'
+      );
+      return false;
+    }
+
+    const item = this._items.getById(itemIdentifier);
+    if (!item) {
+      console.warn(
+        `Tried to add ${amount} of '${itemIdentifier}' inside stash (id: ${stashId}),`,
+        'but that item wasn\'t found in the item registry. This should never happen.'
+      );
+      return false;
+    }
+
+    // TODO: immer.produce or something else from immer. should use recipe defined as a static method on one of the interactions.
+    try {
+      const draft = createDraft(this.stashes.get(stashId)!);
+      ServerOnlyAddItemInteraction.prepare(draft, { item, amount })
+      this.stashes.set(stashId, finishDraft(draft));
+    } catch (error) {
+      console.error(
+        'Remove this log - impossible to add item to stash', error
+      );
+    }
+
+    return true;
+  }
+
+  @Export()
+  public takeItemFromStash(stashId: number, itemIdentifier: string, amount: number): boolean {
+    return this.addItemToStash(stashId, itemIdentifier, -Math.abs(amount));
+  }
+
+  @Export()
+  public transferItemToStash(sourceStashId: number, targetStashId: number, itemIdentifier: string, amount: number): boolean {
+    // TODO: Run SQL query
+    // TODO: immer.produce or something else from immer. it will create a draft for each stash. if any of those fail, this will return false and the operation will be cancelled.
+    return true;
+  }
+
+  @Export()
+  public getItemCountInStashInefficiently(stashId: number, itemIdentifier: string, slots?: Set<number>): number {
+    if (!this.stashes.has(stashId)) {
+      console.warn(
+        `Tried to count the amount of '${itemIdentifier}' inside stash (id: ${stashId}),`,
+        'but there was no cached stash with that ID. This should never happen.'
+      );
+      return 0;
+    }
+
+    const stash = this.stashes.get(stashId)!;
+    let amount = 0;
+    for (let i = 0; i < stash.maxSlots; i++) {
+      if (stash.slots[i] == null) continue;
+      if (stash.slots[i].itemIdentifier == itemIdentifier) {
+        // TODO: Save the retrieved amount inside the SlotCache
+        // TODO: Save the weight inside the SlotCache
+        amount += stash.slots[i].amount;
+        slots?.add(i);
+      }
+    }
+
+    return amount;
+  }
+
+  @Export()
+  public getProbableItemCountInStash(stashId: number, itemIdentifier: string, slots?: Set<number>): number {
+    throw new Error('Not yet implemented');
+  }
+
+  @Export()
+  public getOccupiedWeightInStashInefficiently(stashId: number): number {
+    if (!this.stashes.has(stashId)) {
+      console.warn(
+        `Tried to count the weight inside stash (id: ${stashId}),`,
+        'but there was no cached stash with that ID. This should never happen.'
+      );
+      return 0;
+    }
+
+    const stash = this.stashes.get(stashId)!;
+    let weight = 0;
+    for (let i = 0; i < stash.maxSlots; i++) {
+      if (stash.slots[i] == null) continue;
+      // TODO: Save the retrieved amount inside the SlotCache
+      // TODO: Save the weight inside the SlotCache
+      
+      const item = this._items.getById(stash.slots[i].itemIdentifier);
+      if (!item) {
+        console.warn(
+          `Tried to count the weight inside stash (id: ${stashId}), but the slot at index`,
+          `${i} had an item which couldn't be found in the items registry. This should`,
+          'never happen.'
+        );
+        continue;
+      }
+
+      weight += item.weight * stash.slots[i].amount;
+    }
+
+    return weight;
+  }
+
+  @Export()
+  public getProbableOccupiedWeightInStash(stashId: number): number {
+    throw new Error('Not yet implemented');
+  }
 
   /** Only successful access checks refresh the player's inactivity timeout. */
   @Export()

@@ -9,6 +9,12 @@ version '1.0.1'
 server_script 'dist/server/*.server.js'
 client_script 'dist/client/*.client.js'
 
+files {
+  'items/items.json',
+  'items/images/*.png',
+  'locales/*.json'
+}
+
 -- Configuration
 spawn 'config' {
   position = { x = 247.83297729492188, y = -343.20001220703125, z = 44.4615478515625 },

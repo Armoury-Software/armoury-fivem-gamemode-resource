@@ -13,23 +13,16 @@ export class StashSyncService {
 
   @EventListener({ eventName: 'armoury-roleplay:safe:stash:revision:new', direction: EVENT_DIRECTIONS.SERVER_TO_CLIENT })
   protected _onRevisionUpdatedAsResultOfOwnChange(stashId: number, revision: number) {
-    console.log('revision changed:', revision, 'stashId:', stashId);
-    
     UI.sendMessage({ type: 'global:stash:revision:new', stashId, revision });
   }
 
   @EventListener({ eventName: 'armoury-roleplay:safe:stash:resync', direction: EVENT_DIRECTIONS.SERVER_TO_CLIENT })
   protected _onStashChangedBySomeoneElse(stashId: number, patches: Patch[], revision: number) {
-    console.log('revision changed:', revision);
-    console.log('new patches:', patches);
-
     UI.sendMessage({ type: 'global:stash:resync', stashId, patches, revision });
   }
 
   @EventListener({ eventName: 'armoury-roleplay:safe:stash:reset', direction: EVENT_DIRECTIONS.SERVER_TO_CLIENT })
-  protected _onResetNeededAsResultOfOwnChange(stash: Stash, revision: number) {
-    console.log('revision changed:', revision);
-
+  protected _onResetNeededAsResultOfExternalChange(stash: Stash, revision: number) {
     UI.sendMessage({ type: 'global:stash:reset', stash, revision });
   }
 

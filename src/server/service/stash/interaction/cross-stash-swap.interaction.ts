@@ -2,7 +2,7 @@ import { Stash } from '@armoury/fivem-roleplay-gamemode-server';
 import { Injectable } from 'injection-js';
 import { Immutable } from 'immer';
 
-import { StashInteraction, StashRecipe } from './stash.interaction';
+import { StashInteraction, SourceRecipe, TargetRecipe } from './stash.interaction';
 
 @Injectable()
 export class CrossStashSwapInteraction implements StashInteraction {
@@ -11,8 +11,9 @@ export class CrossStashSwapInteraction implements StashInteraction {
     change: unknown /* TODO: Add typing to this */,
     source: Immutable<Stash>,
     target: Immutable<Stash>
-  ): { sourceRecipe: StashRecipe; targetRecipe?: StashRecipe; } {
+  ): { sourceRecipe: SourceRecipe; targetRecipe?: TargetRecipe; } {
     // TODO: Validate this
+    // TODO: The recipe can fail. If that happens, any change to the slot cache needs to be reverted. Prefer using immer for the slot cache as well, and bundle the recipes with the slot cache recipe.
     return {
       sourceRecipe: (draft, change) => {
         const { sourceSlotId, targetSlotId } = change as { sourceSlotId: number; targetSlotId: number };

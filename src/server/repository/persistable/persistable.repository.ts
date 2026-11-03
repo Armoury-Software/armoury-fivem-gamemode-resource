@@ -11,21 +11,8 @@ export class PersistableRepository {
     lastKnownPosition: [number, number, number] | null = null,
     lastKnownRotation: [number, number, number] | null = [0, 0, 0]
   ): Promise<Persistable> {
-    const id = await this._db.instance.insert_async(
-      `INSERT INTO persistables (
-        owner, lastKnownPosX, lastKnownPosY, lastKnownPosZ,
-        lastKnownRotX, lastKnownRotY, lastKnownRotZ
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [
-        ownerId ?? null,
-        lastKnownPosition?.[0] ?? null,
-        lastKnownPosition?.[1] ?? null,
-        lastKnownPosition?.[2] ?? null,
-        lastKnownRotation?.[0] ?? 0,
-        lastKnownRotation?.[1] ?? 0,
-        lastKnownRotation?.[2] ?? 0,
-      ]
-    );
+    const query = this.getCreateQuery(ownerId, lastKnownPosition, lastKnownRotation);
+    const id = await this._db.instance.insert_async(query.query, query.values);
 
     return new Persistable(
       id,
@@ -45,6 +32,28 @@ export class PersistableRepository {
           }
         : { x: 0, y: 0, z: 0 }
     );
+  }
+
+  public getCreateQuery(
+    ownerId: number | null = null,
+    lastKnownPosition: [number, number, number] | null = null,
+    lastKnownRotation: [number, number, number] | null = [0, 0, 0]
+  ): { query: string; values: unknown[] } {
+    return ({
+      query: `INSERT INTO persistables (
+        owner, lastKnownPosX, lastKnownPosY, lastKnownPosZ,
+        lastKnownRotX, lastKnownRotY, lastKnownRotZ
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      values: [
+        ownerId ?? null,
+        lastKnownPosition?.[0] ?? null,
+        lastKnownPosition?.[1] ?? null,
+        lastKnownPosition?.[2] ?? null,
+        lastKnownRotation?.[0] ?? 0,
+        lastKnownRotation?.[1] ?? 0,
+        lastKnownRotation?.[2] ?? 0,
+      ]
+    });
   }
 
   public async findById(id: number): Promise<Persistable | null> {

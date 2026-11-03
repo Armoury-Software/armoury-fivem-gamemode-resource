@@ -8,6 +8,9 @@ import { StashService } from './stash.service';
 import { StashInteraction } from './interaction/stash.interaction';
 import { SameStashSwapInteraction } from './interaction/same-stash-swap.interaction';
 import { CrossStashSwapInteraction } from './interaction/cross-stash-swap.interaction';
+import { SameStashMergeInteraction } from './interaction/same-stash-merge.interaction';
+import { CrossStashMergeInteraction } from './interaction/cross-stash-merge.interaction';
+import { StashSlotSplitInteraction } from './interaction/stash-slot-split.interaction';
 
 @Injectable()
 export class StashWatcher {
@@ -21,13 +24,19 @@ export class StashWatcher {
     private readonly _stashes: StashService,
     swapInSameStash: SameStashSwapInteraction,
     swapCrossStash: CrossStashSwapInteraction,
+    mergeInSameStash: SameStashMergeInteraction,
+    mergeCrossStash: CrossStashMergeInteraction,
+    splitSplot: StashSlotSplitInteraction,
   ) {
     this._stashes.playerAllowedToStash$.subscribe(this.onPlayerAllowedToStash.bind(this));
     this._stashes.playerDisallowedFromStash$.subscribe(this.onPlayerDisallowedFromStash.bind(this));
 
     this._interactions = new Map([
       ['same-stash-slot-swap', swapInSameStash],
-      ['cross-stash-slot-swap', swapCrossStash]
+      ['cross-stash-slot-swap', swapCrossStash],
+      ['same-stash-slot-transfer', mergeInSameStash],
+      ['cross-stash-slot-transfer', mergeCrossStash],
+      ['stash-slots-take', splitSplot],
     ]);
   }
 
@@ -58,14 +67,9 @@ export class StashWatcher {
       }
 
       sourceStash = this._stashes.stashes.get(changes.sourceStashId);
-      const hasDistinctTarget = changes.targetStashId != null
-        && changes.targetStashId !== changes.sourceStashId;
+      targetStash = this._stashes.stashes.get(changes.targetStashId);
 
-      targetStash = hasDistinctTarget
-        ? this._stashes.stashes.get(changes.targetStashId!)
-        : undefined;
-
-      if (!sourceStash || (hasDistinctTarget && !targetStash)) {
+      if (!sourceStash || (changes.targetStashId != null && !targetStash)) {
         throw new Error('Unknown stash ID.');
       }
 
@@ -91,8 +95,16 @@ export class StashWatcher {
         }
       }
 
+      if (sourceWatch && changes.sourceRevision != null) {
+        sourceWatch.updateRevision(playerId, changes.sourceRevision);
+      }
+
       if (!sourceWatch.compare(changes.sourceRevision)) {
         throw new Error('Outdated source revision');
+      }
+
+      if (targetWatch && changes.targetRevision != null) {
+        targetWatch.updateRevision(playerId, changes.targetRevision);
       }
 
       if (targetStash && !targetWatch.compare(changes.targetRevision)) {
@@ -105,18 +117,22 @@ export class StashWatcher {
       }
 
       const { sourceRecipe, targetRecipe } = recipes;
+      const sameStash = targetStash?.id === sourceStash.id;
 
-      if (targetStash && !targetRecipe) {
+      if (targetStash && !sameStash && !targetRecipe) {
         throw new Error('Missing target recipe.');
       }
 
-      let sourcePatches: Patch[];
-      let targetPatches: Patch[];
+      let sourcePatches: Patch[] = [];
+      let targetPatches: Patch[] = [];
 
       const sourceDraft = createDraft(sourceStash);
       let nextSource: Stash;
       try {
         sourceRecipe(sourceDraft, changes);
+        if (sameStash) {
+          targetRecipe?.(sourceDraft, changes);
+        }
       } finally {
         nextSource = finishDraft(
           sourceDraft,
@@ -125,7 +141,7 @@ export class StashWatcher {
       }
 
       let nextTarget: Stash | undefined;
-      if (targetStash) {
+      if (targetStash && !sameStash) {
         const targetDraft = createDraft(targetStash);
         try {
           targetRecipe!(targetDraft, changes);
@@ -142,9 +158,12 @@ export class StashWatcher {
         this._stashes.stashes.set(nextTarget.id, nextTarget);
       }
 
-      sourceWatch.commit(sourcePatches, sourceStash, playerId);
-      targetWatch?.commit(targetPatches, targetStash, playerId);
+      sourceWatch.commit(sourcePatches, nextSource, playerId);
+      if (nextTarget) {
+        targetWatch!.commit(targetPatches, nextTarget, playerId);
+      }
     } catch (error) {
+      console.error('Got an error while receiving proposed change to stash (unsafe)', error);
       if (sourceStash) {
         sourceWatch.resync(playerId, sourceStash, changes.sourceRevision);
       }
@@ -224,40 +243,48 @@ export class StashWatcher {
 
 class StashWatch {
   #stashId: number;
-  private readonly _playerIds: Set<number>;
+  private readonly _playerIdsToLastKnownRevisions: Map<number, number>;
   private readonly _revisions: RevisionHistory;
 
   public constructor(stashId: number) {
     this.#stashId = stashId;
-    this._playerIds = new Set<number>();
+    this._playerIdsToLastKnownRevisions = new Map<number, number>();
     this._revisions = new RevisionHistory();
   }
 
   public commit(patches: Patch[], confirmedState: Stash, triggererPlayerId: number): void {
     const revision = this._revisions.generate(patches);
 
-    for (const playerId of this._playerIds) {
+    for (const playerIdToRevision of this._playerIdsToLastKnownRevisions) {
+      const playerId = playerIdToRevision[0];
+      const playerRevision = playerIdToRevision[1];
+
       if (playerId == triggererPlayerId) {
         this.notify(playerId, this.#stashId, revision);
       } else {
-        this.resync(playerId, confirmedState, revision);
+        this.resync(playerId, confirmedState, playerRevision);
       }
     }
   }
 
-  public resync(playerId: number, confirmedState: Stash, revision: number): void {
-    const patches = this._revisions.getDiff(revision);
+  public resync(playerId: number, confirmedState: Stash, playerRevision: number): void {
+    console.log('Last known revision of player', Cfx.Server.GetPlayerName(playerId.toString()), 'is', playerRevision);
+    const patches = this._revisions.getDiff(playerRevision);
     if (patches != null) {
-      Cfx.emitNet('armoury-roleplay:safe:stash:resync', playerId, confirmedState.id, patches, revision);
+      console.log('Patches for player', Cfx.Server.GetPlayerName(playerId.toString()), 'are', patches);
+      Cfx.emitNet('armoury-roleplay:safe:stash:resync', playerId, confirmedState.id, patches, this._revisions.get());
+      this._playerIdsToLastKnownRevisions.set(playerId, this._revisions.get());
       return;
     }
 
     // Hard resets instead of resyncing
-    Cfx.emitNet('armoury-roleplay:safe:stash:reset', playerId, Stash.toStub(confirmedState), revision);
+    Cfx.emitNet('armoury-roleplay:safe:stash:reset', playerId, Stash.toStub(confirmedState), this._revisions.get());
+    this._playerIdsToLastKnownRevisions.set(playerId, this._revisions.get());
   }
 
   private notify(playerId: number, stashId: number, revision: number): void {
     Cfx.emitNet('armoury-roleplay:safe:stash:revision:new', playerId, stashId, revision);
+    this._playerIdsToLastKnownRevisions.set(playerId, revision);
   }
 
   public compare(playerRevision: number): boolean {
@@ -265,23 +292,31 @@ class StashWatch {
   }
 
   public include(playerId: number): void {
-    this._playerIds.add(playerId);
+    this._playerIdsToLastKnownRevisions.set(playerId, this._revisions.get());
+  }
+
+  public updateRevision(playerId: number, revision: number): void {
+    if (!this._playerIdsToLastKnownRevisions.has(playerId)) {
+      return;
+    }
+
+    this._playerIdsToLastKnownRevisions.set(playerId, revision);
   }
 
   public has(playerId: number): boolean {
-    return this._playerIds.has(playerId);
+    return this._playerIdsToLastKnownRevisions.has(playerId);
   }
 
   public dismiss(playerId: number): void {
-    this._playerIds.delete(playerId);
+    this._playerIdsToLastKnownRevisions.delete(playerId);
   }
 
   public isStale(): boolean {
-    return this._playerIds.size == 0;
+    return this._playerIdsToLastKnownRevisions.size == 0;
   }
 
   public destroy(): void {
-    this._playerIds.clear();
+    this._playerIdsToLastKnownRevisions.clear();
     this._revisions?.destroy();
   }
 }
@@ -290,8 +325,12 @@ class RevisionHistory {
   #sequence = 0;
   #current: number = NaN;
 
-  readonly #revisions = new Map<number, number>();
-  readonly #revisionsToPatches = new Map<number, Patch[]>();
+  readonly #revisions = new Map<number, number>([
+    [NaN, 0]
+  ]);
+  readonly #revisionsToPatches = new Map<number, Patch[]>([
+    [NaN, []]
+  ]);
 
   constructor(
     private readonly _maxHistory = 64,
@@ -323,8 +362,12 @@ class RevisionHistory {
     return this.#current = identifier;
   }
 
-  public getDiff(revision: number): Patch[] | null {
-    const sequence = this.#revisions.get(revision);
+  public getDiff(playerRevision: number): Patch[] | null {
+    console.log('calling getDiff with revision', playerRevision);
+    console.log('current revisions:', Object.fromEntries(this.#revisions));
+    console.log('current revisionsToPatches:', Object.fromEntries(this.#revisionsToPatches));
+
+    const sequence = this.#revisions.get(playerRevision);
     if (sequence === undefined) {
       return null;
     }

@@ -1,0 +1,11 @@
+[
+  {
+    "id": "cash",
+    "name": "item_cash_name",
+    "description": "item_cash_description",
+    "imagePath": "images/cash.png",
+    "rarity": "common",
+    "stackSize": 100000,
+    "weight": 0.01
+  }
+]
