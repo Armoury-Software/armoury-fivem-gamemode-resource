@@ -1,14 +1,15 @@
 import { EventListener, Export } from '@armoury/fivem-framework-server';
 import { type Stash } from '@armoury/fivem-roleplay-gamemode-server';
 import { Injectable } from 'injection-js';
+import { createDraft, finishDraft } from 'immer';
 import { LRUCache } from 'lru-cache';
 import { Subject } from 'rxjs';
 
 import { StashRepository } from '../../repository/stash/stash.repository';
 import { StashStore } from './stash.store';
 import { ItemService } from './items/item.service';
-import { createDraft, finishDraft, produce } from 'immer';
-import { ServerOnlyAddItemInteraction } from './interaction/add-item.interaction';
+import { StashSlotCache } from './stash-slot.cache';
+import { addItemRecipe } from './recipes/add-item.recipe';
 
 @Injectable()
 export class StashService {
@@ -43,6 +44,7 @@ export class StashService {
   public constructor(
     private readonly _repository: StashRepository,
     private readonly _items: ItemService,
+    private readonly _slotCache: StashSlotCache,
   ) {
     this.stashes = new StashStore(stash => this._repository.saveSlots(stash));
   }
@@ -70,11 +72,18 @@ export class StashService {
       return false;
     }
 
-    // TODO: immer.produce or something else from immer. should use recipe defined as a static method on one of the interactions.
     try {
-      const draft = createDraft(this.stashes.get(stashId)!);
-      ServerOnlyAddItemInteraction.prepare(draft, { item, amount })
-      this.stashes.set(stashId, finishDraft(draft));
+      const draft = createDraft({
+        stash: this.stashes.get(stashId)!,
+        cache: this._slotCache
+      });
+
+      addItemRecipe(draft, item, amount);
+
+      const result = finishDraft(draft);
+      this.stashes.set(stashId, result.stash);
+
+      // TODO: Update the slot cache with the result.cache
     } catch (error) {
       console.error(
         'Remove this log - impossible to add item to stash', error

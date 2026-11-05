@@ -7,5 +7,14 @@
     "rarity": "common",
     "stackSize": 100000,
     "weight": 0.01
+  },
+  {
+    "id": "vehicle-key",
+    "name": "item_vehicle-key_name",
+    "description": "item_vehicle-key_description",
+    "imagePath": "images/key.png",
+    "rarity": "uncommon",
+    "stackSize": 1,
+    "weight": 50
   }
 ]

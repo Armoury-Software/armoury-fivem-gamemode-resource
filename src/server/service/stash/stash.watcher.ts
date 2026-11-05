@@ -1,16 +1,16 @@
 import { EVENT_DIRECTIONS, EventListener } from '@armoury/fivem-framework-server';
 import { Stash } from '@armoury/fivem-roleplay-gamemode-server';
 import { Injectable } from 'injection-js';
-import { createDraft, finishDraft, type Patch } from 'immer';
+import { createDraft, Draft, finishDraft, type Patch } from 'immer';
 import { randomInt } from 'node:crypto';
 
 import { StashService } from './stash.service';
-import { StashInteraction } from './interaction/stash.interaction';
-import { SameStashSwapInteraction } from './interaction/same-stash-swap.interaction';
-import { CrossStashSwapInteraction } from './interaction/cross-stash-swap.interaction';
-import { SameStashMergeInteraction } from './interaction/same-stash-merge.interaction';
-import { CrossStashMergeInteraction } from './interaction/cross-stash-merge.interaction';
-import { StashSlotSplitInteraction } from './interaction/stash-slot-split.interaction';
+import { StashSlotCache } from './stash-slot.cache';
+
+import { StashChangeHandler, type StashChangeHandlerClass } from './interaction/stash.interaction';
+import { StashSlotsSwapInteraction } from './interaction/slots-swap.interaction';
+import { StashSlotsMergeInteraction } from './interaction/slots-merge.interaction';
+import { StashSlotSplitInteraction } from './interaction/slot-split.interaction';
 
 @Injectable()
 export class StashWatcher {
@@ -18,25 +18,24 @@ export class StashWatcher {
   private _stashWatches = new Map<number, StashWatch>();
   private _playerIdsToStashIds = new Map<number, Set<number>>();
 
-  private readonly _interactions: Map<string/* TODO: Use valid typing, declared in shared lib */, StashInteraction>;
+  private readonly _interactions: Map<string/* TODO: Use valid typing, declared in shared lib */, RegisteredStashChangeHandler>;
 
   public constructor(
     private readonly _stashes: StashService,
-    swapInSameStash: SameStashSwapInteraction,
-    swapCrossStash: CrossStashSwapInteraction,
-    mergeInSameStash: SameStashMergeInteraction,
-    mergeCrossStash: CrossStashMergeInteraction,
-    splitSplot: StashSlotSplitInteraction,
+    private readonly _stashSlotCache: StashSlotCache,
+    swap: StashSlotsSwapInteraction,
+    merge: StashSlotsMergeInteraction,
+    split: StashSlotSplitInteraction,
   ) {
     this._stashes.playerAllowedToStash$.subscribe(this.onPlayerAllowedToStash.bind(this));
     this._stashes.playerDisallowedFromStash$.subscribe(this.onPlayerDisallowedFromStash.bind(this));
 
     this._interactions = new Map([
-      ['same-stash-slot-swap', swapInSameStash],
-      ['cross-stash-slot-swap', swapCrossStash],
-      ['same-stash-slot-transfer', mergeInSameStash],
-      ['cross-stash-slot-transfer', mergeCrossStash],
-      ['stash-slots-take', splitSplot],
+      ['same-stash-slot-swap', { instance: swap, class: StashSlotsSwapInteraction }],
+      ['cross-stash-slot-swap', { instance: swap, class: StashSlotsSwapInteraction }],
+      ['same-stash-slot-transfer', { instance: merge, class: StashSlotsMergeInteraction }],
+      ['cross-stash-slot-transfer', { instance: merge, class: StashSlotsMergeInteraction }],
+      ['stash-slots-take', { instance: split, class: StashSlotSplitInteraction }],
     ]);
   }
 
@@ -61,13 +60,13 @@ export class StashWatcher {
         throw new Error('Invalid changes object.');
       }
 
+      sourceStash = this._stashes.stashes.get(changes.sourceStashId);
+      targetStash = this._stashes.stashes.get(changes.targetStashId);
+
       const interaction = this._interactions.get(changes.type);
       if (!interaction) {
         throw new Error('Unknown interaction requested.');
       }
-
-      sourceStash = this._stashes.stashes.get(changes.sourceStashId);
-      targetStash = this._stashes.stashes.get(changes.targetStashId);
 
       if (!sourceStash || (changes.targetStashId != null && !targetStash)) {
         throw new Error('Unknown stash ID.');
@@ -111,47 +110,28 @@ export class StashWatcher {
         throw new Error('Outdated target revision');
       }
 
-      const recipes = interaction.resolve(changes, sourceStash, targetStash);
-      if (!recipes) {
-        throw new Error('Interaction validation failed.');
-      }
+      const resolved =
+        interaction.instance.validateAndResolve(changes, sourceStash, targetStash);
 
-      const { sourceRecipe, targetRecipe } = recipes;
-      const sameStash = targetStash?.id === sourceStash.id;
+      const isSameStash = sourceStash.id === targetStash?.id;
 
-      if (targetStash && !sameStash && !targetRecipe) {
-        throw new Error('Missing target recipe.');
-      }
+      let sourcePatches: Patch[] = [], targetPatches: Patch[] = [];
 
-      let sourcePatches: Patch[] = [];
-      let targetPatches: Patch[] = [];
+      const draft: Draft<TransactionState> = createDraft({
+        source: sourceStash,
+        target: isSameStash ? null : targetStash,
+        cache: this._stashSlotCache,
+      });
 
-      const sourceDraft = createDraft(sourceStash);
-      let nextSource: Stash;
-      try {
-        sourceRecipe(sourceDraft, changes);
-        if (sameStash) {
-          targetRecipe?.(sourceDraft, changes);
+      interaction.class.bake(draft, changes, resolved);
+
+      const { source: nextSource, target: nextTarget } = finishDraft(
+        draft,
+        producedPatches => {
+          sourcePatches = this.extractPatches(producedPatches, 'source');
+          targetPatches = this.extractPatches(producedPatches, 'target');
         }
-      } finally {
-        nextSource = finishDraft(
-          sourceDraft,
-          producedPatches => sourcePatches = producedPatches
-        );
-      }
-
-      let nextTarget: Stash | undefined;
-      if (targetStash && !sameStash) {
-        const targetDraft = createDraft(targetStash);
-        try {
-          targetRecipe!(targetDraft, changes);
-        } finally {
-          nextTarget = finishDraft(
-            targetDraft,
-            producedPatches => targetPatches = producedPatches
-          );
-        }
-      }
+      );
 
       this._stashes.stashes.set(sourceStash.id, nextSource);
       if (nextTarget) {
@@ -232,14 +212,36 @@ export class StashWatcher {
     this._playerIdsToStashIds.delete(playerId);
   }
 
+  private extractPatches(
+    patches: Patch[],
+    root: 'source' | 'target'
+  ): Patch[] {
+    return patches
+      .filter(p => p.path[0] === root)
+      .map(p => ({
+        ...p,
+        path: p.path.slice(1)
+      }));
+  }
+
   @EventListener()
   protected onPlayerDisconnect(): void {
     this.dismiss(Cfx.source);
   }
 
   // TODO: EventListener for when a character got logged out, which calls this.dismiss()
-
 }
+
+interface RegisteredStashChangeHandler<TChange = any> {
+  instance: StashChangeHandler<TChange>;
+  class: StashChangeHandlerClass<TChange>;
+}
+
+type TransactionState = {
+  source: Stash;
+  target: Stash;
+  cache: StashSlotCache;
+};
 
 class StashWatch {
   #stashId: number;

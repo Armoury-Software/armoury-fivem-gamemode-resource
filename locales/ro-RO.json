@@ -1,4 +1,6 @@
 {
   "item_cash_name": "Bancnote",
-  "item_cash_description": "O colectie de bancnote."
+  "item_cash_description": "O colectie de bancnote. (%{amount})",
+  "item_vehicle-key_name": "Cheie Vehicul",
+  "item_vehicle-key_description": "Cheia unui %{metadata.vehicleName}. (%{metadata.vehiclePlates}) [#%{metadata.vehicleId}]"
 }
